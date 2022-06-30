@@ -1,0 +1,25 @@
+#chessboard .square {
+    display: grid;
+    place-content: center;
+    width: 100px;
+    height: 100px;
+} 
+#chessboard .square .dark-square {
+    background-color: #eeeed2;
+} 
+#chessboard .light-square {
+    background-color: #769656;
+} 
+#chessboard .square .chess-piece {
+    width: 100px;
+    height: 100px;
+    background-size: 90px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+#chessboard .square .chess-piece:hover { 
+    cursor: grab;
+}
+#chessboard .square .chess-piece:active { 
+    cursor: grabbing;
+}
