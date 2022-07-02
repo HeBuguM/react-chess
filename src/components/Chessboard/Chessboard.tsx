@@ -12,6 +12,7 @@ export interface Piece {
     y: number;
     type: PieceType;
     team: TeamType;
+    enPassantEnabled?: boolean;
 }
 
 export enum PieceType {
@@ -92,27 +93,51 @@ export default function Chessboard() {
             const dropX = Math.floor((e.clientX - chessboard.offsetLeft) / 100);
             const dropY = Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - 800) / 100));
     
-            // Update Piece possition
-            setPieces((boardState) => {
-                const pieces = boardState.map((p) => {
-                    if(p.x === grabX && p.y === grabY) {
-                        const validMode = referee.isValidMove(grabX, grabY, dropX, dropY,p.type, p.team, boardState);
-                        if(validMode) {
-                            p.x = dropX;
-                            p.y = dropY;
-                        } else {
-                            activePiece.style.position = "relative";
-                            activePiece.style.removeProperty("top");
-                            activePiece.style.removeProperty("left");
+            const currentPiece = pieces.find(p => p.x === grabX && p.y === grabY);
+            
+            if(currentPiece) {
+                const pawnDirection = currentPiece.team === TeamType.WHITE ? 1 : -1;
+                const enPassantMove = referee.isEnPassantMove(grabX, grabY, dropX, dropY,currentPiece.type, currentPiece.team, pieces);
+                const validMode = referee.isValidMove(grabX, grabY, dropX, dropY,currentPiece.type, currentPiece.team, pieces);
+                if(enPassantMove) {
+                    const updatedPieces = pieces.reduce((results,piece) => {
+                        if(piece.x === grabX && piece.y === grabY) {
+                            piece.x = dropX;
+                            piece.y = dropY;
+                            piece.enPassantEnabled = Math.abs(grabY - dropY) === 2 && piece.type === PieceType.PAWN ? true : false;
+                            results.push(piece);
+                        } else if (!(piece.x === dropX && piece.y === dropY - pawnDirection)) {
+                            piece.enPassantEnabled = false;
+                            results.push(piece);
                         }
-                    }
-                    return p;
-                });
-                return pieces;
-            })
+                        return results;
+                    }, [] as Piece[]);
+                    setPieces(updatedPieces);
+                } else if(validMode) {
+                    // Update Piece
+                    const updatedPieces = pieces.reduce((results,piece) => {
+                        if(piece.x === grabX && piece.y === grabY) {
+                            piece.x = dropX;
+                            piece.y = dropY;
+                            piece.enPassantEnabled = Math.abs(grabY - dropY) === 2 && piece.type === PieceType.PAWN ? true : false;
+                            results.push(piece);
+                        } else if (!(piece.x === dropX && piece.y === dropY)) {
+                            piece.enPassantEnabled = false;
+                            results.push(piece);
+                        }
+                        return results;
+                    }, [] as Piece[]);
+                    setPieces(updatedPieces);
+                } else {
+                    // Reset Piece
+                    activePiece.style.position = "relative";
+                    activePiece.style.removeProperty("top");
+                    activePiece.style.removeProperty("left");
+                }
+            }
             setActivePiece(null);
         }
-    }
+     }
 
     let board = [];
     let horizontalLabels = [];
