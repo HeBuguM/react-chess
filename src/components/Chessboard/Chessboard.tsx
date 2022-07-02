@@ -21,8 +21,8 @@ export default function Chessboard() {
             );
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
-            element.style.position = "absolute";
             element.style.zIndex = "100";
+            element.style.position = "absolute";
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
             setActivePiece(element);
@@ -86,9 +86,9 @@ export default function Chessboard() {
                     setPieces(updatedPieces);
                 } else {
                     // Reset Piece
+                    activePiece.style.removeProperty("z-index");
                     activePiece.style.removeProperty("position");
                     activePiece.style.removeProperty("top");
-                    activePiece.style.removeProperty("z-index");
                     activePiece.style.removeProperty("left");
                 }
             }
