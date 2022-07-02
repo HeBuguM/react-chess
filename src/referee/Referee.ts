@@ -1,22 +1,22 @@
-import { PieceType, TeamType, Piece } from "../components/Chessboard/Chessboard";
+import { PieceType, TeamType, Piece, Position } from "../Constants";
 
 export default class Referee {
 
-    isOccupied(dropX:number, dropY:number, boardState: Piece[]): boolean {
-        const piece = boardState.find(p => p.x === dropX && p.y === dropY);
+    isOccupied(dropPosition: Position, boardState: Piece[]): boolean {
+        const piece = boardState.find(p => p.position.x === dropPosition.x && p.position.y === dropPosition.y);
         return piece ? true : false;
     }
 
-    isEnemy(dropX:number, dropY:number, boardState: Piece[], team: TeamType): boolean {
-        const piece = boardState.find(p => p.x === dropX && p.y === dropY && p.team !== team);
+    isEnemy(dropPosition: Position, boardState: Piece[], team: TeamType): boolean {
+        const piece = boardState.find(p => p.position.x === dropPosition.x && p.position.y === dropPosition.y && p.team !== team);
         return piece ? true : false;
     }
 
-    isEnPassantMove(grabX:number , grabY:number, dropX:number, dropY:number, type: PieceType, team: TeamType, boardState: Piece[]) {
+    isEnPassantMove(grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, boardState: Piece[]) {
         if(type === PieceType.PAWN) {
             const pawnDirection = team === TeamType.WHITE ? 1 : -1;
-            if((dropX - grabX === 1 || dropX - grabX === -1) && dropY - grabY === pawnDirection) {
-                const piece = boardState.find(p => p.x === dropX && p.y === dropY - pawnDirection && p.enPassantEnabled)
+            if((dropPosition.x - grabPosition.x === 1 || dropPosition.x - grabPosition.x === -1) && dropPosition.y - grabPosition.y === pawnDirection) {
+                const piece = boardState.find(p => p.position.x === dropPosition.x && p.position.y === dropPosition.y - pawnDirection && p.enPassantEnabled)
                 if(piece) {
                     return true;
                 }
@@ -25,20 +25,20 @@ export default class Referee {
         return false;
     }
      
-    isValidMove (grabX:number , grabY:number, dropX:number, dropY:number, type: PieceType, team: TeamType, boardState: Piece[]) {
+    isValidMove (grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, boardState: Piece[]) {
         if(type === PieceType.PAWN) {
             const firstMove = team === TeamType.WHITE ? 1 : 6
             const pawnDirection = team === TeamType.WHITE ? 1 : -1;
-            const isOccupied = this.isOccupied(dropX, dropY, boardState);
-            const isEnemy = isOccupied && this.isEnemy(dropX, dropY, boardState, team); 
+            const isOccupied = this.isOccupied(dropPosition, boardState);
+            const isEnemy = isOccupied && this.isEnemy(dropPosition, boardState, team); 
             // Move
-            if(grabX === dropX && ((dropY - grabY  === pawnDirection && !isOccupied) || (grabY === firstMove && dropY - grabY === 2*pawnDirection && !this.isOccupied(dropX, dropY-(pawnDirection), boardState)))) {
+            if(grabPosition.x === dropPosition.x && ((dropPosition.y - grabPosition.y  === pawnDirection && !isOccupied) || (grabPosition.y === firstMove && dropPosition.y - grabPosition.y === 2*pawnDirection && !this.isOccupied({x: dropPosition.x, y: dropPosition.y-pawnDirection}, boardState)))) {
                 if(!isOccupied) {
                     return true;
                 }
             }
             // Attack
-            if((dropX - grabX === 1 || dropX - grabX === -1) && dropY - grabY === pawnDirection && isEnemy) {
+            if((dropPosition.x - grabPosition.x === 1 || dropPosition.x - grabPosition.x === -1) && dropPosition.y - grabPosition.y === pawnDirection && isEnemy) {
                 return true;
             }
         }
