@@ -18,11 +18,10 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && rimraf docs && move build docs",
+    "build": "set PUBLIC_URL=https://hebugum.github.io/react-chess&&react-scripts build && rimraf docs && move build docs",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "homepage" : "https://hebugum.github.io/react-chess",
   "eslintConfig": {
     "extends": [
       "react-app",
