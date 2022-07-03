@@ -46,11 +46,57 @@ export default class Referee {
         }
         // KNIGHT
         if(type === PieceType.KNIGHT) {
-            if(Math.abs(grabPosition.x-dropPosition.x) === 1 && Math.abs(grabPosition.y-dropPosition.y)  === 2 && (!isOccupied || isEnemy)) {
+            if(((Math.abs(grabPosition.x-dropPosition.x) === 1 && Math.abs(grabPosition.y-dropPosition.y)  === 2) || (Math.abs(grabPosition.x-dropPosition.x) === 2 && Math.abs(grabPosition.y-dropPosition.y)  === 1)) && (!isOccupied || isEnemy)) {
                 return true;
             }
-            if(Math.abs(grabPosition.x-dropPosition.x) === 2 && Math.abs(grabPosition.y-dropPosition.y)  === 1 && (!isOccupied || isEnemy)) {
-                return true;
+        }
+        // BISHOP
+        if(type === PieceType.BISHOP) {
+            // Diagonal Move -> Math.abs(grabPosition.x-dropPosition.x) - Math.abs(grabPosition.y-dropPosition.y) === 0
+            for(let i = 1; i < 8; i++) {
+                // Top Right
+                if(dropPosition.x > grabPosition.x && dropPosition.y > grabPosition.y) {
+                    let PassedPosition: Position = {x: grabPosition.x + i, y: grabPosition.y + i}
+                    if(samePosition(PassedPosition,dropPosition) && (!isOccupied || isEnemy)) {
+                        return true;
+                    }
+                    if(this.isOccupied(PassedPosition, boardState)) {
+                        break;
+                    }
+                }
+
+                // Bottom Right
+                if(dropPosition.x > grabPosition.x && dropPosition.y < grabPosition.y) {
+                    let PassedPosition: Position = {x: grabPosition.x + i, y: grabPosition.y - i}
+                    if(samePosition(PassedPosition,dropPosition) && (!isOccupied || isEnemy)) {
+                        return true;
+                    }
+                    if(this.isOccupied(PassedPosition, boardState)) {
+                        break;
+                    }
+                }
+
+                // Bottom Left
+                if(dropPosition.x < grabPosition.x && dropPosition.y < grabPosition.y) {
+                    let PassedPosition: Position = {x: grabPosition.x - i, y: grabPosition.y - i}
+                    if(samePosition(PassedPosition,dropPosition) && (!isOccupied || isEnemy)) {
+                        return true;
+                    }
+                    if(this.isOccupied(PassedPosition, boardState)) {
+                        break;
+                    }
+                }
+
+                // Top Left
+                if(dropPosition.x < grabPosition.x && dropPosition.y > grabPosition.y) {
+                    let PassedPosition: Position = {x: grabPosition.x - i, y: grabPosition.y + i}
+                    if(samePosition(PassedPosition,dropPosition) && (!isOccupied || isEnemy)) {
+                        return true;
+                    }
+                    if(this.isOccupied(PassedPosition, boardState)) {
+                        break;
+                    }
+                }
             }
         }
         return false;
