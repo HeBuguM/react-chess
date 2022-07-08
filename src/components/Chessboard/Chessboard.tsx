@@ -1,11 +1,11 @@
+import "./Chessboard.css";
 import { useRef, useState } from "react";
 import Square from "../Squere/Square";
-import "./Chessboard.css";
-import Referee from "../../referee/Referee";
+import Arbiter from "../../arbiter/Arbiter";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position} from "../../Constants";
 
 export default function Chessboard() {
-    const referee = new Referee();
+    const arbiter = new Arbiter();
     const [activePiece, setActivePiece] = useState<HTMLElement | null>(null)
     const [grabPosition, setGrabPosition] = useState<Position>({ x: -1, y: -1 })
     const [pieces, setPieces] = useState<Piece[]>(initialBoardPieces)
@@ -53,8 +53,8 @@ export default function Chessboard() {
 
             if(currentPiece) {
                 const pawnDirection = currentPiece.team === TeamType.WHITE ? 1 : -1;
-                const enPassantMove = referee.isEnPassantMove(grabPosition, {x: dropX, y: dropY},currentPiece.type, currentPiece.team, pieces);
-                const validMode = referee.isValidMove(grabPosition, {x: dropX, y: dropY},currentPiece.type, currentPiece.team, pieces);
+                const enPassantMove = arbiter.isEnPassantMove(grabPosition, {x: dropX, y: dropY},currentPiece.type, currentPiece.team, pieces);
+                const validMode = arbiter.isValidMove(grabPosition, {x: dropX, y: dropY},currentPiece.type, currentPiece.team, pieces);
                 if(enPassantMove) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
@@ -70,7 +70,6 @@ export default function Chessboard() {
                     }, [] as Piece[]);
                     setPieces(updatedPieces);
                 } else if(validMode) {
-                    // Update Piece
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
                             piece.position.x = dropX;

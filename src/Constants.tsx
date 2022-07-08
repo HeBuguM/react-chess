@@ -38,7 +38,7 @@ for (let p = 0; p < 2; p++) {
     const type = p === 0 ? "b" : "w";
     const team = p === 0 ? TeamType.BLACK : TeamType.WHITE;
     const y = p === 0 ? 7 : 0;
-    initialBoardPieces.push({ image: `assets/images/rook_${type}.png`, position: { x: 0, y: y}, type: PieceType.ROOK, team: team });
+    initialBoardPieces.push({image: `assets/images/rook_${type}.png`, position: { x: 0, y: y}, type: PieceType.ROOK, team: team });
     initialBoardPieces.push({image: `assets/images/rook_${type}.png`, position: { x: 7, y: y}, type: PieceType.ROOK, team: team});
     initialBoardPieces.push({image: `assets/images/knight_${type}.png`, position: { x: 1, y: y}, type: PieceType.KNIGHT, team: team});
     initialBoardPieces.push({image: `assets/images/knight_${type}.png`, position: { x: 6, y: y}, type: PieceType.KNIGHT, team: team});
