@@ -103,7 +103,7 @@ export default function Chessboard() {
                     castleRights[grabbedPiece.team].king = false
                     castleRights[grabbedPiece.team].queen = false
                     setCastleRights(castleRights);
-                    moves.push(side === 'king' ? "O-O" : "O-O-O");
+                    addNotation(grabbedPiece,grabPosition,dropPosition, side === 'king' ? "O-O" : "O-O-O");
                     setMoves(moves);
                 } else if(validMode) {
                     const updatedPieces = pieces.reduce((results,piece) => {
@@ -149,13 +149,12 @@ export default function Chessboard() {
         }
     }
 
-    function addNotation(grabbedPiece: Piece, grabPosition: Position, dropPosition: Position) {
-        let mvs = moves;
+    function addNotation(grabbedPiece: Piece, grabPosition: Position, dropPosition: Position, notation?: string) {
         let piece = grabbedPiece.type !== PieceType.PAWN ? (grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase()) : "";
         let old_coordinates = translatePosition(grabPosition);
         let new_coordinates = translatePosition(dropPosition);
-        mvs.push(piece+new_coordinates);
-        setMoves(mvs);
+        moves.push(notation ? notation : piece+new_coordinates);
+        setMoves(moves);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
     }
