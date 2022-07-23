@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "https://hebugum.github.io/react-chess/static/css/main.0bfa836d.css",
-    "main.js": "https://hebugum.github.io/react-chess/static/js/main.730d3784.js",
+    "main.css": "https://hebugum.github.io/react-chess/static/css/main.86edfd46.css",
+    "main.js": "https://hebugum.github.io/react-chess/static/js/main.251c7d48.js",
     "static/js/787.fb9c7072.chunk.js": "https://hebugum.github.io/react-chess/static/js/787.fb9c7072.chunk.js",
     "index.html": "https://hebugum.github.io/react-chess/index.html",
-    "main.0bfa836d.css.map": "https://hebugum.github.io/react-chess/static/css/main.0bfa836d.css.map",
-    "main.730d3784.js.map": "https://hebugum.github.io/react-chess/static/js/main.730d3784.js.map",
+    "main.86edfd46.css.map": "https://hebugum.github.io/react-chess/static/css/main.86edfd46.css.map",
+    "main.251c7d48.js.map": "https://hebugum.github.io/react-chess/static/js/main.251c7d48.js.map",
     "787.fb9c7072.chunk.js.map": "https://hebugum.github.io/react-chess/static/js/787.fb9c7072.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.0bfa836d.css",
-    "static/js/main.730d3784.js"
+    "static/css/main.86edfd46.css",
+    "static/js/main.251c7d48.js"
   ]
 }
