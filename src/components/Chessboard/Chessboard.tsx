@@ -2,7 +2,7 @@ import "./Chessboard.css";
 import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position} from "../../Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights} from "../../Constants";
 import Notation from "../Notation/Notation";
 
 export default function Chessboard() {
@@ -12,7 +12,10 @@ export default function Chessboard() {
     const [grabPosition, setGrabPosition] = useState<Position>({ x: -1, y: -1 });
     const [pieces, setPieces] = useState<Piece[]>(initialBoardPieces);
     const [moves, setMoves] = useState<Array<string>>([]);
-    const [enPassantEnabled, setEnPassantEnabled] = useState<Position | null>(null);
+    const [castleRights, setCastleRights] = useState<CastleRights>({
+        white: {queen: true, king: true},
+        black: {queen: true, king: true}
+    });
     const chessboardRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
@@ -56,17 +59,18 @@ export default function Chessboard() {
     function dropPiece(e: React.MouseEvent) {
         const chessboard = chessboardRef.current;
         if(activePiece && chessboard) {
-            const currentPiece = pieces.find(p => p.position.x === grabPosition.x && p.position.y === grabPosition.y);
+            const grabbedPiece = pieces.find(p => p.position.x === grabPosition.x && p.position.y === grabPosition.y);
             const dropPosition: Position = {
                 x: Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE),
                 y: Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE))
             }
             
-            if(currentPiece) {
-                const pawnDirection = currentPiece.team === TeamType.WHITE ? 1 : -1;
-                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition,currentPiece.type, currentPiece.team, pieces);
-                const validMode = arbiter.isValidMove(grabPosition, dropPosition,currentPiece.type, currentPiece.team, pieces);
-                const promotionRow = currentPiece.team === TeamType.WHITE ? 7 : 0;
+            if(grabbedPiece) {
+                const pawnDirection = grabbedPiece.team === TeamType.WHITE ? 1 : -1;
+                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces);
+                const castleMove = arbiter.isCastleMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces, castleRights);
+                const validMode = arbiter.isValidMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces);
+                const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
                 if(enPassantMove) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
@@ -80,7 +84,27 @@ export default function Chessboard() {
                         return results;
                     }, [] as Piece[]);
                     setPieces(updatedPieces);
-                    addNotation(currentPiece,grabPosition,dropPosition);
+                    addNotation(grabbedPiece,grabPosition,dropPosition);
+                } else if(castleMove) {
+                    const side = grabPosition.x-dropPosition.x < 0 ? 'king' : 'queen';
+                    const updatedPieces = pieces.reduce((results,piece) => {
+                        if(samePosition(piece.position, grabPosition)) {
+                            piece.position.x = (side === 'king' ? piece.position.x+2 : piece.position.x-2);
+                            results.push(piece);
+                        } else if (piece.type === PieceType.ROOK && piece.team === grabbedPiece.team && piece.position.x === (side === 'king' ? 7 : 0)) {
+                            piece.position.x = (side === 'king' ? piece.position.x-2 : piece.position.x+3);
+                            results.push(piece);
+                        } else {
+                            results.push(piece);
+                        }
+                        return results;
+                    }, [] as Piece[]);
+                    setPieces(updatedPieces);
+                    castleRights[grabbedPiece.team].king = false
+                    castleRights[grabbedPiece.team].queen = false
+                    setCastleRights(castleRights);
+                    moves.push(side === 'king' ? "O-O" : "O-O-O");
+                    setMoves(moves);
                 } else if(validMode) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
@@ -90,6 +114,20 @@ export default function Chessboard() {
                                 modalRef.current?.classList.add("active");
                                 setPromotionPawn(piece);
                             }
+                            if(piece.type === PieceType.KING) {
+                                castleRights[piece.team].king = false
+                                castleRights[piece.team].queen = false
+                                setCastleRights(castleRights);
+                            }
+                            if(piece.type === PieceType.ROOK) {
+                                if(grabPosition.x === 7) {
+                                    castleRights[piece.team].king = false
+                                }
+                                if(grabPosition.x === 0) {
+                                    castleRights[piece.team].queen = false
+                                }
+                                setCastleRights(castleRights);
+                            }
                             results.push(piece);
                         } else if (!samePosition(piece.position,  dropPosition)) {
                             piece.enPassantEnabled = false;
@@ -98,7 +136,7 @@ export default function Chessboard() {
                         return results;
                     }, [] as Piece[]);
                     setPieces(updatedPieces);
-                    addNotation(currentPiece,grabPosition,dropPosition);
+                    addNotation(grabbedPiece,grabPosition,dropPosition);
                 } else {
                     // Reset Piece
                     activePiece.style.removeProperty("z-index");
@@ -111,12 +149,11 @@ export default function Chessboard() {
         }
     }
 
-    function addNotation(currentPiece: Piece, grabPosition: Position, dropPosition: Position) {
+    function addNotation(grabbedPiece: Piece, grabPosition: Position, dropPosition: Position) {
         let mvs = moves;
-        let piece = currentPiece.type !== PieceType.PAWN ? (currentPiece.type === PieceType.KNIGHT ? currentPiece.type.substring(1,2).toLocaleUpperCase() : currentPiece.type.substring(0,1).toLocaleUpperCase()) : "";
+        let piece = grabbedPiece.type !== PieceType.PAWN ? (grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase()) : "";
         let old_coordinates = translatePosition(grabPosition);
         let new_coordinates = translatePosition(dropPosition);
-        console.log(old_coordinates, new_coordinates);
         mvs.push(piece+new_coordinates);
         setMoves(mvs);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
@@ -133,9 +170,7 @@ export default function Chessboard() {
         }
         const updatedPieces = pieces.reduce((results,piece) => {
             if(samePosition(piece.position, promotionPawn.position)) {
-                const Team = piece.team === TeamType.WHITE ? "w" : "b"
-                piece.type = Type;  
-                piece.image = `/assets/images/${Name}_${Team}.png`;
+                piece.type = Type;
             }
             results.push(piece);
             return results;

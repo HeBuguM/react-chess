@@ -1,5 +1,6 @@
-import { PieceType, TeamType, Piece, Position } from "../Constants";
+import { PieceType, TeamType, Piece, Position, CastleRights } from "../Constants";
 import { pawnMove, bishopMove, kingMove, knightMove, queenMove, rookMove } from "./rules";
+import { isOccupied } from "./rules/GeneralRules";
 
 export default class Arbiter {
 
@@ -12,6 +13,25 @@ export default class Arbiter {
                     return true;
                 }
             }
+        }
+        return false;
+    }
+
+    isCastleMove(grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, boardState: Piece[], castleRights: CastleRights): boolean {
+        const side = grabPosition.x-dropPosition.x < 0 ? 'king' : 'queen';
+        const moved = Math.abs(grabPosition.x-dropPosition.x);
+        const directionX = dropPosition.x < grabPosition.x ? -1 : ( dropPosition.x > grabPosition.x ? 1 : 0);
+        const last = side === 'king' ? 3 : 4;
+        // Check Path
+        for(let i = 1; i < last; i++) {
+            let PassedPosition: Position = {x: grabPosition.x + (i*directionX), y: grabPosition.y}
+            if(isOccupied(PassedPosition, boardState)) {
+                return false;
+            }
+        }
+        // Check Castle
+        if(type === PieceType.KING && grabPosition.y === dropPosition.y && (moved === 2 || moved === last)) {
+            return castleRights[team][side];
         }
         return false;
     }
