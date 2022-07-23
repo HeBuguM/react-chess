@@ -14,7 +14,7 @@
     background-color: #fff;
 } 
 #chessboard .square.light.new {
-    background-color: #ffffa5;
+    background-color: #ffffd8;
 } 
 #chessboard .square .chess-piece {
     width: 100px;
