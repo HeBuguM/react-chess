@@ -1,0 +1,19 @@
+#notation {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    width: 150px;
+    height: 800px;
+    position: absolute;
+    top: calc(50% - 400px);
+    right: calc(50% - 560px);
+    background: #41403d;
+    align-content: flex-start;
+}
+
+#notation div {
+    /* padding: 5px; */
+    color: #bcbcbb;
+    width: 60px;
+    padding: 5px;
+}
