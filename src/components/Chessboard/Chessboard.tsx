@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position} from "../../Constants";
+import Notation from "../Notation/Notation";
 
 export default function Chessboard() {
     const arbiter = new Arbiter();
@@ -10,8 +11,14 @@ export default function Chessboard() {
     const [promotionPawn, setPromotionPawn] = useState<Piece>();
     const [grabPosition, setGrabPosition] = useState<Position>({ x: -1, y: -1 });
     const [pieces, setPieces] = useState<Piece[]>(initialBoardPieces);
+    const [moves, setMoves] = useState<Array<string>>([]);
+    const [enPassantEnabled, setEnPassantEnabled] = useState<Position | null>(null);
     const chessboardRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    function translatePosition(position: Position) {
+        return HORIZONTAL_AXIS[position.x]+VERTICAL_AXIS[position.y];
+    }
 
     function grabPiece(e: React.MouseEvent) {
         let element = e.target as HTMLElement;
@@ -49,47 +56,49 @@ export default function Chessboard() {
     function dropPiece(e: React.MouseEvent) {
         const chessboard = chessboardRef.current;
         if(activePiece && chessboard) {
-            const dropX = Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE);
-            const dropY = Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE));
             const currentPiece = pieces.find(p => p.position.x === grabPosition.x && p.position.y === grabPosition.y);
-
+            const dropPosition: Position = {
+                x: Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE),
+                y: Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE))
+            }
+            
             if(currentPiece) {
                 const pawnDirection = currentPiece.team === TeamType.WHITE ? 1 : -1;
-                const enPassantMove = arbiter.isEnPassantMove(grabPosition, {x: dropX, y: dropY},currentPiece.type, currentPiece.team, pieces);
-                const validMode = arbiter.isValidMove(grabPosition, {x: dropX, y: dropY},currentPiece.type, currentPiece.team, pieces);
+                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition,currentPiece.type, currentPiece.team, pieces);
+                const validMode = arbiter.isValidMove(grabPosition, dropPosition,currentPiece.type, currentPiece.team, pieces);
                 const promotionRow = currentPiece.team === TeamType.WHITE ? 7 : 0;
                 if(enPassantMove) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
-                            piece.position.x = dropX;
-                            piece.position.y = dropY;
-                            piece.enPassantEnabled = Math.abs(grabPosition.y - dropY) === 2 && piece.type === PieceType.PAWN;
+                            piece.position = dropPosition;
+                            piece.enPassantEnabled = Math.abs(grabPosition.y - dropPosition.y) === 2 && piece.type === PieceType.PAWN;
                             results.push(piece);
-                        } else if (!samePosition(piece.position,  {x: dropX, y: dropY - pawnDirection})) {
+                        } else if (!samePosition(piece.position,  {x: dropPosition.x, y: dropPosition.y - pawnDirection})) {
                             piece.enPassantEnabled = false;
                             results.push(piece);
                         }
                         return results;
                     }, [] as Piece[]);
                     setPieces(updatedPieces);
+                    addNotation(currentPiece,grabPosition,dropPosition);
                 } else if(validMode) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
-                            piece.position.x = dropX;
-                            piece.position.y = dropY;
-                            piece.enPassantEnabled = Math.abs(grabPosition.y - dropY) === 2 && piece.type === PieceType.PAWN;
-                            if(piece.type === PieceType.PAWN && dropY === promotionRow) {
+                            piece.position = dropPosition;
+                            piece.enPassantEnabled = Math.abs(grabPosition.y - dropPosition.y) === 2 && piece.type === PieceType.PAWN;
+                            if(piece.type === PieceType.PAWN && dropPosition.y === promotionRow) {
                                 modalRef.current?.classList.add("active");
                                 setPromotionPawn(piece);
                             }
                             results.push(piece);
-                        } else if (!samePosition(piece.position,  {x: dropX, y: dropY})) {
+                        } else if (!samePosition(piece.position,  dropPosition)) {
                             piece.enPassantEnabled = false;
                             results.push(piece);
                         }
                         return results;
                     }, [] as Piece[]);
                     setPieces(updatedPieces);
+                    addNotation(currentPiece,grabPosition,dropPosition);
                 } else {
                     // Reset Piece
                     activePiece.style.removeProperty("z-index");
@@ -100,6 +109,18 @@ export default function Chessboard() {
             }
             setActivePiece(null);
         }
+    }
+
+    function addNotation(currentPiece: Piece, grabPosition: Position, dropPosition: Position) {
+        let mvs = moves;
+        let piece = currentPiece.type !== PieceType.PAWN ? (currentPiece.type === PieceType.KNIGHT ? currentPiece.type.substring(1,2).toLocaleUpperCase() : currentPiece.type.substring(0,1).toLocaleUpperCase()) : "";
+        let old_coordinates = translatePosition(grabPosition);
+        let new_coordinates = translatePosition(dropPosition);
+        console.log(old_coordinates, new_coordinates);
+        mvs.push(piece+new_coordinates);
+        setMoves(mvs);
+        document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
+        document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
     }
 
     function promotionPawnTeam() {
@@ -131,8 +152,7 @@ export default function Chessboard() {
             const square = i + j + 2;
             const piece = pieces.find(p => samePosition(p.position, {x: i, y: j}))
             let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
-            let image = piece ? piece.image : undefined;
-            board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} image={image} />)
+            board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
         }
     }
 
@@ -159,12 +179,13 @@ export default function Chessboard() {
         </div>
         <div id="pawn-promotion-modal" ref={modalRef}>
             <div className="modal-body">
-                <img onClick={() => promotePawn(PieceType.QUEEN,'queen')} src={`/assets/images/queen_${promotionPawnTeam()}.png`} alt="Queen"/>
-                <img onClick={() => promotePawn(PieceType.ROOK,'rook')} src={`/assets/images/rook_${promotionPawnTeam()}.png`} alt="Rook"/>
-                <img onClick={() => promotePawn(PieceType.BISHOP,'bishop')} src={`/assets/images/bishop_${promotionPawnTeam()}.png`} alt="Bishop"/>
-                <img onClick={() => promotePawn(PieceType.KNIGHT,'knight')} src={`/assets/images/knight_${promotionPawnTeam()}.png`} alt="Knight"/>
+                <img onClick={() => promotePawn(PieceType.QUEEN,'queen')} src={`assets/images/queen_${promotionPawnTeam()}.png`} alt="Queen"/>
+                <img onClick={() => promotePawn(PieceType.ROOK,'rook')} src={`assets/images/rook_${promotionPawnTeam()}.png`} alt="Rook"/>
+                <img onClick={() => promotePawn(PieceType.BISHOP,'bishop')} src={`assets/images/bishop_${promotionPawnTeam()}.png`} alt="Bishop"/>
+                <img onClick={() => promotePawn(PieceType.KNIGHT,'knight')} src={`assets/images/knight_${promotionPawnTeam()}.png`} alt="Knight"/>
             </div>
         </div>
+        <Notation moves={moves}/>
         </>
     );
 }

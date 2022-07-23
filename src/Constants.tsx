@@ -19,17 +19,17 @@ export interface Piece {
 }
 
 export enum PieceType {
-    PAWN,
-    BISHOP,
-    KNIGHT,
-    ROOK,
-    QUEEN,
-    KING
+    PAWN='pawn',
+    BISHOP='bishop',
+    KNIGHT='knight',
+    ROOK='rook',
+    QUEEN='queen',
+    KING='king'
 }
 
 export enum TeamType {
-    BLACK,
-    WHITE
+    BLACK='black',
+    WHITE='white'
 }
 
 // Init Board Pieces

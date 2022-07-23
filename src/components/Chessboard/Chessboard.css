@@ -12,7 +12,6 @@
     justify-content: center;
     overflow: hidden;
 }
-
 #chessboard .horizontalLabels {
     -webkit-user-select: none; /* Safari */        
     -moz-user-select: none; /* Firefox */
@@ -69,12 +68,9 @@
     right: 0px;
     bottom: 0px;
 }
-
 #pawn-promotion-modal.active {
     display: block;
 }
-
-
 #pawn-promotion-modal > .modal-body {
     display: flex;
     align-items: center;
@@ -86,7 +82,6 @@
     top: calc(50% - 100px);
     left: calc(50% - 400px);
 }
-
 #pawn-promotion-modal > .modal-body img {
     cursor: pointer;
     height: 150px;
@@ -97,4 +92,3 @@
     background-color: rgb(250,250,250, 0.2);
     border-radius: 30%;
 }
-

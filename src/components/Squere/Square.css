@@ -4,11 +4,17 @@
     width: 100px;
     height: 100px;
 } 
-#chessboard .square .dark-square {
-    background-color: #eeeed2;
+#chessboard .square.dark {
+    background-color: #5da2b5;
 } 
-#chessboard .light-square {
-    background-color: #769656;
+#chessboard .square.dark.new {
+    background-color: #397788;
+} 
+#chessboard .square.light {
+    background-color: #fff;
+} 
+#chessboard .square.light.new {
+    background-color: #ffffa5;
 } 
 #chessboard .square .chess-piece {
     width: 100px;
@@ -22,4 +28,42 @@
 }
 #chessboard .square .chess-piece:active { 
     cursor: grabbing;
+}
+
+#chessboard .square .chess-piece.pawn.white {
+    background-image: url("../../../public/assets/images/pawn_w.png");
+}
+#chessboard .square .chess-piece.bishop.white {
+    background-image: url("../../../public/assets/images/bishop_w.png");
+}
+#chessboard .square .chess-piece.knight.white {
+    background-image: url("../../../public/assets/images/knight_w.png");
+}
+#chessboard .square .chess-piece.rook.white {
+    background-image: url("../../../public/assets/images/rook_w.png");
+}
+#chessboard .square .chess-piece.queen.white {
+    background-image: url("../../../public/assets/images/queen_w.png");
+}
+#chessboard .square .chess-piece.king.white {
+    background-image: url("../../../public/assets/images/king_w.png");
+}
+
+#chessboard .square .chess-piece.pawn.black {
+    background-image: url("../../../public/assets/images/pawn_b.png");
+}
+#chessboard .square .chess-piece.bishop.black {
+    background-image: url("../../../public/assets/images/bishop_b.png");
+}
+#chessboard .square .chess-piece.knight.black {
+    background-image: url("../../../public/assets/images/knight_b.png");
+}
+#chessboard .square .chess-piece.rook.black {
+    background-image: url("../../../public/assets/images/rook_b.png");
+}
+#chessboard .square .chess-piece.queen.black {
+    background-image: url("../../../public/assets/images/queen_b.png");
+}
+#chessboard .square .chess-piece.king.black {
+    background-image: url("../../../public/assets/images/king_b.png");
 }
