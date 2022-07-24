@@ -4,14 +4,11 @@ import { isOccupied } from "./rules/GeneralRules";
 
 export default class Arbiter {
 
-    isEnPassantMove(grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, boardState: Piece[]): boolean {
-        if(type === PieceType.PAWN) {
+    isEnPassantMove(grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, enPassantTarget: Position | false): boolean {
+        if(type === PieceType.PAWN && enPassantTarget) {
             const pawnDirection = team === TeamType.WHITE ? 1 : -1;
-            if((dropPosition.x - grabPosition.x === 1 || dropPosition.x - grabPosition.x === -1) && dropPosition.y - grabPosition.y === pawnDirection) {
-                const piece = boardState.find(p => p.position.x === dropPosition.x && p.position.y === dropPosition.y - pawnDirection && p.enPassantEnabled)
-                if(piece) {
-                    return true;
-                }
+            if(Math.abs(dropPosition.x - grabPosition.x) === 1 && dropPosition.y - grabPosition.y === pawnDirection) {
+                return dropPosition.x === enPassantTarget.x && dropPosition.y === enPassantTarget.y;
             }
         }
         return false;

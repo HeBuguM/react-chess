@@ -12,6 +12,7 @@ export default function Chessboard() {
     const [grabPosition, setGrabPosition] = useState<Position>({ x: -1, y: -1 });
     const [pieces, setPieces] = useState<Piece[]>(initialBoardPieces);
     const [moves, setMoves] = useState<Array<string>>([]);
+    const [enPassantTarget, setEnPassantTarget] = useState<Position | false>(false);
     const [castleRights, setCastleRights] = useState<CastleRights>({
         white: {queen: true, king: true},
         black: {queen: true, king: true}
@@ -67,7 +68,7 @@ export default function Chessboard() {
             
             if(grabbedPiece) {
                 const pawnDirection = grabbedPiece.team === TeamType.WHITE ? 1 : -1;
-                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces);
+                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, enPassantTarget);
                 const castleMove = arbiter.isCastleMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces, castleRights);
                 const validMode = arbiter.isValidMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces);
                 const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
@@ -75,15 +76,14 @@ export default function Chessboard() {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
                             piece.position = dropPosition;
-                            piece.enPassantEnabled = Math.abs(grabPosition.y - dropPosition.y) === 2 && piece.type === PieceType.PAWN;
                             results.push(piece);
                         } else if (!samePosition(piece.position,  {x: dropPosition.x, y: dropPosition.y - pawnDirection})) {
-                            piece.enPassantEnabled = false;
                             results.push(piece);
                         }
                         return results;
                     }, [] as Piece[]);
                     setPieces(updatedPieces);
+                    setEnPassantTarget(false);
                     addNotation(grabbedPiece,grabPosition,dropPosition);
                 } else if(castleMove) {
                     const side = grabPosition.x-dropPosition.x < 0 ? 'king' : 'queen';
@@ -103,13 +103,14 @@ export default function Chessboard() {
                     castleRights[grabbedPiece.team].king = false
                     castleRights[grabbedPiece.team].queen = false
                     setCastleRights(castleRights);
+                    setEnPassantTarget(false);
                     addNotation(grabbedPiece,grabPosition,dropPosition, side === 'king' ? "O-O" : "O-O-O");
                     setMoves(moves);
                 } else if(validMode) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
                             piece.position = dropPosition;
-                            piece.enPassantEnabled = Math.abs(grabPosition.y - dropPosition.y) === 2 && piece.type === PieceType.PAWN;
+                            
                             if(piece.type === PieceType.PAWN && dropPosition.y === promotionRow) {
                                 modalRef.current?.classList.add("active");
                                 setPromotionPawn(piece);
@@ -128,6 +129,7 @@ export default function Chessboard() {
                                 }
                                 setCastleRights(castleRights);
                             }
+                            setEnPassantTarget(piece.type === PieceType.PAWN && Math.abs(grabPosition.y - dropPosition.y) === 2 ? {x: dropPosition.x, y: dropPosition.y-pawnDirection} : false);
                             results.push(piece);
                         } else if (!samePosition(piece.position,  dropPosition)) {
                             piece.enPassantEnabled = false;
