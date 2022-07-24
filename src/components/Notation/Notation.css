@@ -3,17 +3,36 @@
     flex-wrap: wrap;
     flex-direction: row;
     width: 150px;
-    height: 800px;
+    max-height: 400px;
     position: absolute;
     top: calc(50% - 400px);
     right: calc(50% - 560px);
-    background: #41403d;
     align-content: flex-start;
-}
-
-#notation div {
-    /* padding: 5px; */
+    background: #41403d;
     color: #bcbcbb;
-    width: 60px;
+    overflow: auto;
+    scrollbar-width: thin;
+}
+#notation::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background-color: #333332;
+    
+}
+#notation::-webkit-scrollbar-thumb {
+    background: #838382;
+  }
+#notation .fullMove {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+#notation .fullMove div {
+    width: 50px;
     padding: 5px;
+    text-align: center;
+}
+#notation .fullMove .moveNo {
+    width: 20px;
+    background: #302f2d;
 }

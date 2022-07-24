@@ -153,10 +153,11 @@ export default function Chessboard() {
         let piece = grabbedPiece.type !== PieceType.PAWN ? (grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase()) : "";
         let old_coordinates = translatePosition(grabPosition);
         let new_coordinates = translatePosition(dropPosition);
-        moves.push(notation ? notation : piece+new_coordinates);
-        setMoves(moves);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
+        moves.push(notation ? notation : piece+new_coordinates);
+        setMoves(moves);
+        setTimeout(scrollNotation,100)
     }
 
     function promotionPawnTeam() {
@@ -196,6 +197,10 @@ export default function Chessboard() {
     for(let l = 0; l < 8; l++) {
         horizontalLabels.push(<div key={`h${l}`}>{HORIZONTAL_AXIS[l]}</div>)
         verticalLabels.push(<div key={`v${l}`}>{VERTICAL_AXIS[l]}</div>)
+    }
+
+    const scrollNotation = () => {
+        document.querySelector(".fullMove:last-child")?.scrollIntoView({ behavior: "smooth" })
     }
 
     return (
