@@ -3,9 +3,9 @@
     flex-wrap: wrap;
     flex-direction: row;
     width: 150px;
-    max-height: 400px;
+    height: 400px;
     position: absolute;
-    top: calc(50% - 400px);
+    top: calc(50% - 200px);
     right: calc(50% - 560px);
     align-content: flex-start;
     background: #41403d;
