@@ -92,3 +92,37 @@
     background-color: rgb(250,250,250, 0.2);
     border-radius: 30%;
 }
+
+#FEN {
+    position: absolute;
+    width: 720px;
+    background-color: #41403d;
+    padding: 10px;
+    border-radius: 4px;
+    top: 10px;
+    color: #bcbcbb;
+}
+
+#FEN::before {
+    content: "FEN";
+    color: #bcbcbb;
+    margin-right: 20px;
+}
+
+#turnTeam {
+    width: 150px;
+    height: 10px;
+    position: absolute;
+    
+    right: calc(50% - 560px);
+}
+#turnTeam.white {
+    bottom: calc(50% - 210px);
+    background: white;
+    color: black;
+}
+#turnTeam.black {
+    top: calc(50% - 210px);
+    background: black;
+    color: white;
+}

@@ -9,6 +9,9 @@ export default function Chessboard() {
     const arbiter = new Arbiter();
     const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
     const [promotionPawn, setPromotionPawn] = useState<Piece>();
+    const [turnTeam, setTurnTeam] = useState<TeamType>(TeamType.WHITE);
+    const [halfMoves, setHalfMoves] = useState<number>(0);
+    const [fullMoves, setFullMoves] = useState<number>(1);
     const [grabPosition, setGrabPosition] = useState<Position>({ x: -1, y: -1 });
     const [pieces, setPieces] = useState<Piece[]>(initialBoardPieces);
     const [moves, setMoves] = useState<Array<string>>([]);
@@ -72,7 +75,8 @@ export default function Chessboard() {
                 const castleMove = arbiter.isCastleMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces, castleRights);
                 const validMode = arbiter.isValidMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, pieces);
                 const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
-                if(enPassantMove) {
+                const correctTeam = turnTeam === grabbedPiece.team;
+                if(correctTeam && enPassantMove) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
                             piece.position = dropPosition;
@@ -85,7 +89,10 @@ export default function Chessboard() {
                     setPieces(updatedPieces);
                     setEnPassantTarget(false);
                     addNotation(grabbedPiece,grabPosition,dropPosition);
-                } else if(castleMove) {
+                    setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
+                    setHalfMoves(0);
+                    setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
+                } else if(correctTeam && castleMove) {
                     const side = grabPosition.x-dropPosition.x < 0 ? 'king' : 'queen';
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
@@ -104,9 +111,12 @@ export default function Chessboard() {
                     castleRights[grabbedPiece.team].queen = false
                     setCastleRights(castleRights);
                     setEnPassantTarget(false);
-                    addNotation(grabbedPiece,grabPosition,dropPosition, side === 'king' ? "O-O" : "O-O-O");
+                    setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
                     setMoves(moves);
-                } else if(validMode) {
+                    setHalfMoves(halfMoves+1);
+                    setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
+                    addNotation(grabbedPiece,grabPosition,dropPosition, side === 'king' ? "O-O" : "O-O-O");
+                } else if(correctTeam && validMode) {
                     const updatedPieces = pieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
                             piece.position = dropPosition;
@@ -138,6 +148,9 @@ export default function Chessboard() {
                         return results;
                     }, [] as Piece[]);
                     setPieces(updatedPieces);
+                    setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
+                    setHalfMoves(grabbedPiece.type === PieceType.PAWN ? 0 : halfMoves+1);
+                    setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
                     addNotation(grabbedPiece,grabPosition,dropPosition);
                 } else {
                     // Reset Piece
@@ -181,6 +194,53 @@ export default function Chessboard() {
         modalRef.current?.classList.remove("active");
     }
 
+    function generateFIN() {
+        let FEN = [];
+
+        let ranks = [];
+        for(let y = 7; y >= 0; y--) {
+
+            let row =  [];
+            let no_piece = 0;
+
+            for(let x = 0; x < 8; x++) {
+
+                const piece = pieces.find(p => samePosition(p.position, {x: x, y: y}))
+                if(piece) {
+                    if(no_piece > 0) {
+                        row.push(no_piece);
+                    }
+                    let sign = piece.type === PieceType.KNIGHT ? 'n' : piece.type.substring(0,1);
+                    row.push(piece.team === TeamType.BLACK ? sign : sign.toLocaleUpperCase());
+                    no_piece = 0;
+                } else {
+                    no_piece++;
+                }
+            }
+            if(no_piece > 0) {
+                row.push(no_piece);
+            }
+            ranks.push(row.join(""));
+        }
+
+        console.log(ranks);
+        // Pieces
+        FEN.push(ranks.join("/")); 
+        // Turn
+        FEN.push(turnTeam.substring(0,1).toLocaleLowerCase()); 
+        // Castle
+        let castling = (castleRights.white.king ? "K" : "") + (castleRights.white.queen ? "Q" : "") + (castleRights.black.king ? "k" : "") + (castleRights.black.queen ? "q" : "");
+        FEN.push(castling ? castling : "-"); 
+        // En Passant
+        FEN.push(enPassantTarget ? translatePosition(enPassantTarget) : "-"); 
+        // Halfmoves
+        FEN.push(halfMoves); 
+        // Fullmoves
+        FEN.push(fullMoves); 
+        
+        return FEN.join(" ");
+    }
+
 
     // Render Board
     let board = [];
@@ -207,6 +267,7 @@ export default function Chessboard() {
 
     return (
         <>
+        <div id="FEN">{generateFIN()}</div>
         <div 
             id="chessboard"
             ref={chessboardRef}
@@ -227,6 +288,7 @@ export default function Chessboard() {
             </div>
         </div>
         <Notation moves={moves}/>
+        <div id="turnTeam" className={turnTeam}></div>
         </>
     );
 }
