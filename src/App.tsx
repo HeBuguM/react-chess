@@ -2,12 +2,12 @@ import React from 'react';
 import './App.css';
 import Chessboard from './components/Chessboard/Chessboard';
 
-function App() {
+const App = () => {
   return (
     <div className="app">
       <Chessboard/>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
