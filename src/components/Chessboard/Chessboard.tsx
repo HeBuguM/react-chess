@@ -194,7 +194,7 @@ export default function Chessboard() {
         modalRef.current?.classList.remove("active");
     }
 
-    function generateFIN() {
+    function generateFEN() {
         let FEN = [];
 
         let ranks = [];
@@ -223,7 +223,6 @@ export default function Chessboard() {
             ranks.push(row.join(""));
         }
 
-        console.log(ranks);
         // Pieces
         FEN.push(ranks.join("/")); 
         // Turn
@@ -240,6 +239,43 @@ export default function Chessboard() {
         
         return FEN.join(" ");
     }
+
+    function loadFEN() {
+        let new_FEN = prompt("Enter FEN");
+        let fenBoard = new_FEN?.split(" ")[0];
+        let x = 0;
+        let y = 7;
+        let boardPieces: Piece[] = [];
+        let pieceTypeSymbols:any = {
+            'p': PieceType.PAWN,
+            'r': PieceType.ROOK,
+            'b': PieceType.BISHOP,
+            'n': PieceType.KNIGHT,
+            'q': PieceType.QUEEN,
+            'k': PieceType.KING,
+        }
+        if(new_FEN && fenBoard) {
+            fenBoard.split('').forEach((symbol:any) => {
+                if(symbol === '/') {
+                    x = 0;
+                    y--;
+                } else {
+                    if(!isNaN(symbol)) {
+                        x += parseInt(symbol);
+                    } else {
+                        let type = pieceTypeSymbols[symbol.toLowerCase()];
+                        let team = symbol === symbol.toLowerCase() ? TeamType.BLACK : TeamType.WHITE;
+                        boardPieces.push({position: {x: x, y: y}, type: type, team: team})
+                        x++;
+                    }
+                }
+    
+            });
+            setPieces(boardPieces);
+            document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
+        }
+    };
+      
 
 
     // Render Board
@@ -267,7 +303,10 @@ export default function Chessboard() {
 
     return (
         <>
-        <div id="FEN">{generateFIN()}</div>
+        <div id="FEN">
+            <input type="text" value={generateFEN()}/>
+            <button className="loadFEN" onClick={loadFEN}>Load</button>
+        </div>
         <div 
             id="chessboard"
             ref={chessboardRef}

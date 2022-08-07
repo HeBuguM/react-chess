@@ -97,16 +97,41 @@
     position: absolute;
     width: 720px;
     background-color: #41403d;
-    padding: 10px;
+    padding: 4px;
     border-radius: 4px;
     top: 10px;
     color: #bcbcbb;
+}
+
+#FEN input {
+    padding: 6px;
+    width: 450px;
+    background-color: #41403d;
+    border: 1px solid #41403d;
+    color: #bcbcbb;
+}
+
+#FEN input:focus{
+    outline: none;
 }
 
 #FEN::before {
     content: "FEN";
     color: #bcbcbb;
     margin-right: 20px;
+}
+
+button.loadFEN {
+    cursor: pointer;
+    float: right;
+    padding: 6px;
+    background-color: #41403d;
+    color: #bcbcbb;
+    border: 1px solid #737373;
+    border-radius: 4px;
+}
+button.loadFEN:hover {
+    background-color: #585856;
 }
 
 #turnTeam {
