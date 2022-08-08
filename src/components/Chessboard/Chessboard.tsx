@@ -41,6 +41,13 @@ export default function Chessboard() {
             element.style.position = "absolute";
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
+
+            // document.getElementById("active-piece")?.remove();
+            // const active_sq = document.createElement('div');
+            // active_sq.setAttribute("id", "active-piece");
+            // active_sq.style.cssText = `width: 100px; height: 100px;position: absolute; background-color: #a3ff003d; z-index: 1;`
+            // element.parentElement?.appendChild(active_sq);
+
             setActivePiece(element);
         }
     }
@@ -304,7 +311,7 @@ export default function Chessboard() {
     return (
         <>
         <div id="FEN">
-            <input type="text" value={generateFEN()}/>
+            <input type="text" value={generateFEN()} readOnly/>
             <button className="loadFEN" onClick={loadFEN}>Load</button>
         </div>
         <div 

@@ -22,6 +22,7 @@
     background-size: 90px;
     background-position: center;
     background-repeat: no-repeat;
+    z-index: 90;
 }
 #chessboard .square .chess-piece:hover { 
     cursor: grab;
