@@ -135,7 +135,6 @@ export default function Chessboard() {
                             if(piece.type === PieceType.KING) {
                                 castleRights[piece.team].king = false
                                 castleRights[piece.team].queen = false
-                                setCastleRights(castleRights);
                             }
                             if(piece.type === PieceType.ROOK) {
                                 if(grabPosition.x === 7) {
@@ -144,12 +143,10 @@ export default function Chessboard() {
                                 if(grabPosition.x === 0) {
                                     castleRights[piece.team].queen = false
                                 }
-                                setCastleRights(castleRights);
                             }
                             setEnPassantTarget(piece.type === PieceType.PAWN && Math.abs(grabPosition.y - dropPosition.y) === 2 ? {x: dropPosition.x, y: dropPosition.y-pawnDirection} : false);
                             results.push(piece);
                         } else if (!samePosition(piece.position,  dropPosition)) {
-                            piece.enPassantEnabled = false;
                             results.push(piece);
                         } else if (samePosition(piece.position,  dropPosition)) {
                             if(piece.type === PieceType.ROOK) {
@@ -159,11 +156,11 @@ export default function Chessboard() {
                                 if(dropPosition.x === 0) {
                                     castleRights[piece.team].queen = false
                                 }
-                                setCastleRights(castleRights);
                             }
                         }
                         return results;
                     }, [] as Piece[]);
+                    setCastleRights(castleRights);
                     setBoardPieces(updatedPieces);
                     setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
                     setHalfMoves(grabbedPiece.type === PieceType.PAWN ? 0 : halfMoves+1);

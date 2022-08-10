@@ -57,4 +57,34 @@ export default class Arbiter {
         }
         return isValid;
     }
+
+    kingCheckStatus(boardPieces: Piece[]) {
+        let checkStatus = {
+            'white': false,
+            'black': false
+        }
+        
+        let white_king = boardPieces.find(p => p.type === PieceType.KING && p.team === TeamType.WHITE);
+        if(white_king && white_king.type) {
+            let black_pieces = boardPieces.filter(p => p.type !== PieceType.KING && p.team === TeamType.BLACK);
+            for (const piece of black_pieces) {
+                if(this.isValidMove(piece.position,white_king.position,piece.type,piece.team,boardPieces)) {
+                    checkStatus.white = true;
+                    break;
+                }
+            }
+        }
+
+        let black_king = boardPieces.find(p => p.type === PieceType.KING && p.team === TeamType.BLACK);
+        if(black_king) {
+            let white_pieces = boardPieces.filter(p => p.type !== PieceType.KING && p.team === TeamType.WHITE);
+            for (const piece of white_pieces) {
+                if(this.isValidMove(piece.position,black_king.position,piece.type,piece.team,boardPieces)) {
+                    checkStatus.black = true;
+                    break;
+                }
+            }
+        }
+        return checkStatus;
+    }
 }
