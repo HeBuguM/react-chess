@@ -83,51 +83,57 @@ export default function Chessboard() {
                 const validMode = arbiter.isValidMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, boardPieces);
                 const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
                 const correctTeam = turnTeam === grabbedPiece.team;
+
                 if(correctTeam && enPassantMove) {
                     const updatedPieces = boardPieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
-                            piece.position = dropPosition;
-                            results.push(piece);
+                            results.push({...piece, position: dropPosition});
                         } else if (!samePosition(piece.position,  {x: dropPosition.x, y: dropPosition.y - pawnDirection})) {
                             results.push(piece);
                         }
                         return results;
                     }, [] as Piece[]);
-                    setBoardPieces(updatedPieces);
-                    setEnPassantTarget(false);
-                    addNotation(grabbedPiece,grabPosition,dropPosition);
-                    setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-                    setHalfMoves(0);
-                    setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
+                    const kingCheckStatus = arbiter.kingCheckStatus(updatedPieces);
+                    if(kingCheckStatus[grabbedPiece.team]) {
+                        resetActivePiece(activePiece);
+                    } else {
+                        setBoardPieces(updatedPieces);
+                        setEnPassantTarget(false);
+                        addNotation(grabbedPiece,grabPosition,dropPosition);
+                        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
+                        setHalfMoves(0);
+                        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
+                    }
                 } else if(correctTeam && castleMove) {
                     const side = grabPosition.x-dropPosition.x < 0 ? 'king' : 'queen';
                     const updatedPieces = boardPieces.reduce((results,piece) => {
                         if(samePosition(piece.position, grabPosition)) {
-                            piece.position.x = (side === 'king' ? piece.position.x+2 : piece.position.x-2);
-                            results.push(piece);
+                            results.push({...piece,position: {...piece.position,x: (side === 'king' ? piece.position.x+2 : piece.position.x-2)}});
                         } else if (piece.type === PieceType.ROOK && piece.team === grabbedPiece.team && piece.position.x === (side === 'king' ? 7 : 0)) {
-                            piece.position.x = (side === 'king' ? piece.position.x-2 : piece.position.x+3);
-                            results.push(piece);
+                            results.push({...piece,position: {...piece.position,x: (side === 'king' ? piece.position.x-2 : piece.position.x+3)}});
                         } else {
                             results.push(piece);
                         }
                         return results;
                     }, [] as Piece[]);
-                    setBoardPieces(updatedPieces);
-                    castleRights[grabbedPiece.team].king = false
-                    castleRights[grabbedPiece.team].queen = false
-                    setCastleRights(castleRights);
-                    setEnPassantTarget(false);
-                    setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-                    setMoves(moves);
-                    setHalfMoves(halfMoves+1);
-                    setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
-                    addNotation(grabbedPiece,grabPosition,dropPosition, side === 'king' ? "O-O" : "O-O-O");
+                    const kingCheckStatus = arbiter.kingCheckStatus(updatedPieces);
+                    if(kingCheckStatus[grabbedPiece.team]) {
+                        resetActivePiece(activePiece);
+                    } else {
+                        setBoardPieces(updatedPieces);
+                        castleRights[grabbedPiece.team].king = false
+                        castleRights[grabbedPiece.team].queen = false
+                        setCastleRights(castleRights);
+                        setEnPassantTarget(false);
+                        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
+                        setMoves(moves);
+                        setHalfMoves(halfMoves+1);
+                        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
+                        addNotation(grabbedPiece,grabPosition,dropPosition, side === 'king' ? "O-O" : "O-O-O");
+                    }
                 } else if(correctTeam && validMode) {
                     const updatedPieces = boardPieces.reduce((results,piece) => {
-                        if(samePosition(piece.position, grabPosition)) {
-                            piece.position = dropPosition;
-                            
+                        if(samePosition(piece.position, grabPosition)) {                            
                             if(piece.type === PieceType.PAWN && dropPosition.y === promotionRow) {
                                 modalRef.current?.classList.add("active");
                                 setPromotionPawn(piece);
@@ -145,7 +151,7 @@ export default function Chessboard() {
                                 }
                             }
                             setEnPassantTarget(piece.type === PieceType.PAWN && Math.abs(grabPosition.y - dropPosition.y) === 2 ? {x: dropPosition.x, y: dropPosition.y-pawnDirection} : false);
-                            results.push(piece);
+                            results.push({...piece, position: dropPosition});
                         } else if (!samePosition(piece.position,  dropPosition)) {
                             results.push(piece);
                         } else if (samePosition(piece.position,  dropPosition)) {
@@ -160,31 +166,39 @@ export default function Chessboard() {
                         }
                         return results;
                     }, [] as Piece[]);
-                    setCastleRights(castleRights);
-                    setBoardPieces(updatedPieces);
-                    setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-                    setHalfMoves(grabbedPiece.type === PieceType.PAWN ? 0 : halfMoves+1);
-                    setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
-                    addNotation(grabbedPiece,grabPosition,dropPosition);
+                    const kingCheckStatus = arbiter.kingCheckStatus(updatedPieces);
+                    if(kingCheckStatus[grabbedPiece.team]) {
+                        resetActivePiece(activePiece);
+                    } else {
+                        setBoardPieces(updatedPieces);
+                        setCastleRights(castleRights);
+                        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
+                        setHalfMoves(grabbedPiece.type === PieceType.PAWN ? 0 : halfMoves+1);
+                        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
+                        addNotation(grabbedPiece,grabPosition,dropPosition, '', kingCheckStatus[grabbedPiece.team === TeamType.WHITE ? "black" : "white"]);
+                    }
                 } else {
-                    // Reset Piece
-                    activePiece.style.removeProperty("z-index");
-                    activePiece.style.removeProperty("position");
-                    activePiece.style.removeProperty("top");
-                    activePiece.style.removeProperty("left");
+                    resetActivePiece(activePiece);
                 }
             }
             setActivePiece(null);
         }
     }
 
-    function addNotation(grabbedPiece: Piece, grabPosition: Position, dropPosition: Position, notation?: string) {
+    function resetActivePiece(activePiece:HTMLElement) {
+        activePiece.style.removeProperty("z-index");
+        activePiece.style.removeProperty("position");
+        activePiece.style.removeProperty("top");
+        activePiece.style.removeProperty("left");
+    }
+
+    function addNotation(grabbedPiece: Piece, grabPosition: Position, dropPosition: Position, notation?: string, check?: boolean) {
         let piece = grabbedPiece.type !== PieceType.PAWN ? (grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase()) : "";
         let old_coordinates = translatePosition(grabPosition);
         let new_coordinates = translatePosition(dropPosition);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
-        moves.push(notation ? notation : piece+new_coordinates);
+        moves.push(notation ? notation : piece+new_coordinates+(check ? "+" : ""));
         setMoves(moves);
         setTimeout(scrollNotation,100)
     }

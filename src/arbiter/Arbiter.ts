@@ -19,10 +19,13 @@ export default class Arbiter {
         const moved = Math.abs(grabPosition.x-dropPosition.x);
         const directionX = dropPosition.x < grabPosition.x ? -1 : ( dropPosition.x > grabPosition.x ? 1 : 0);
         const last = side === 'king' ? 3 : 4;
+        if(this.kingCheckStatus(boardState)[team]) {
+            return false;
+        }
         // Check Path
         for(let i = 1; i < last; i++) {
             let PassedPosition: Position = {x: grabPosition.x + (i*directionX), y: grabPosition.y}
-            if(isOccupied(PassedPosition, boardState)) {
+            if(isOccupied(PassedPosition, boardState) || this.canEnemyAttack(PassedPosition, team, boardState)) {
                 return false;
             }
         }
@@ -66,7 +69,7 @@ export default class Arbiter {
         
         let white_king = boardPieces.find(p => p.type === PieceType.KING && p.team === TeamType.WHITE);
         if(white_king && white_king.type) {
-            let black_pieces = boardPieces.filter(p => p.type !== PieceType.KING && p.team === TeamType.BLACK);
+            let black_pieces = boardPieces.filter(p => p.team === TeamType.BLACK);
             for (const piece of black_pieces) {
                 if(this.isValidMove(piece.position,white_king.position,piece.type,piece.team,boardPieces)) {
                     checkStatus.white = true;
@@ -77,7 +80,7 @@ export default class Arbiter {
 
         let black_king = boardPieces.find(p => p.type === PieceType.KING && p.team === TeamType.BLACK);
         if(black_king) {
-            let white_pieces = boardPieces.filter(p => p.type !== PieceType.KING && p.team === TeamType.WHITE);
+            let white_pieces = boardPieces.filter(p => p.team === TeamType.WHITE);
             for (const piece of white_pieces) {
                 if(this.isValidMove(piece.position,black_king.position,piece.type,piece.team,boardPieces)) {
                     checkStatus.black = true;
@@ -86,5 +89,27 @@ export default class Arbiter {
             }
         }
         return checkStatus;
+    }
+
+    canEnemyAttack(targetPosition: Position, team: TeamType, boardPieces: Piece[]) {
+        switch (team) {
+            case 'white':
+                let black_pieces = boardPieces.filter(p => p.team === TeamType.BLACK);
+                for (const piece of black_pieces) {
+                    if(this.isValidMove(piece.position,targetPosition,piece.type,piece.team,boardPieces)) {
+                        return true;
+                    }
+                }
+                break;
+            case 'black':
+                let white_pieces = boardPieces.filter(p => p.team === TeamType.WHITE);
+                for (const piece of white_pieces) {
+                    if(this.isValidMove(piece.position,targetPosition,piece.type,piece.team,boardPieces)) {
+                        return true;
+                    }
+                }
+                break;
+        }
+        return false;
     }
 }
