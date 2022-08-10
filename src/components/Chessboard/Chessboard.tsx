@@ -151,6 +151,16 @@ export default function Chessboard() {
                         } else if (!samePosition(piece.position,  dropPosition)) {
                             piece.enPassantEnabled = false;
                             results.push(piece);
+                        } else if (samePosition(piece.position,  dropPosition)) {
+                            if(piece.type === PieceType.ROOK) {
+                                if(dropPosition.x === 7) {
+                                    castleRights[piece.team].king = false
+                                }
+                                if(dropPosition.x === 0) {
+                                    castleRights[piece.team].queen = false
+                                }
+                                setCastleRights(castleRights);
+                            }
                         }
                         return results;
                     }, [] as Piece[]);
