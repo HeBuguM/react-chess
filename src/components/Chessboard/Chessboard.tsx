@@ -78,9 +78,9 @@ export default function Chessboard() {
             
             if(grabbedPiece) {
                 const pawnDirection = grabbedPiece.team === TeamType.WHITE ? 1 : -1;
-                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, enPassantTarget);
-                const castleMove = arbiter.isCastleMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, boardPieces, castleRights);
-                const validMode = arbiter.isValidMove(grabPosition, dropPosition,grabbedPiece.type, grabbedPiece.team, boardPieces);
+                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition, grabbedPiece, enPassantTarget);
+                const castleMove = arbiter.isCastleMove(grabPosition, dropPosition, grabbedPiece, boardPieces, castleRights);
+                const validMode = arbiter.isValidMove(grabPosition, dropPosition, grabbedPiece, boardPieces);
                 const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
                 const correctTeam = turnTeam === grabbedPiece.team;
 

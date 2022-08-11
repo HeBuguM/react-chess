@@ -4,9 +4,9 @@ import { isOccupied } from "./rules/GeneralRules";
 
 export default class Arbiter {
 
-    isEnPassantMove(grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, enPassantTarget: Position | false): boolean {
-        if(type === PieceType.PAWN && enPassantTarget) {
-            const pawnDirection = team === TeamType.WHITE ? 1 : -1;
+    isEnPassantMove(grabPosition: Position, dropPosition: Position, grabbedPiece: Piece, enPassantTarget: Position | false): boolean {
+        if(grabbedPiece.type === PieceType.PAWN && enPassantTarget) {
+            const pawnDirection = grabbedPiece.team === TeamType.WHITE ? 1 : -1;
             if(Math.abs(dropPosition.x - grabPosition.x) === 1 && dropPosition.y - grabPosition.y === pawnDirection) {
                 return dropPosition.x === enPassantTarget.x && dropPosition.y === enPassantTarget.y;
             }
@@ -14,48 +14,48 @@ export default class Arbiter {
         return false;
     }
 
-    isCastleMove(grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, boardState: Piece[], castleRights: CastleRights): boolean {
+    isCastleMove(grabPosition: Position, dropPosition: Position, grabbedPiece: Piece, boardState: Piece[], castleRights: CastleRights): boolean {
         const side = grabPosition.x-dropPosition.x < 0 ? 'king' : 'queen';
         const moved = Math.abs(grabPosition.x-dropPosition.x);
         const directionX = dropPosition.x < grabPosition.x ? -1 : ( dropPosition.x > grabPosition.x ? 1 : 0);
         const last = side === 'king' ? 3 : 4;
-        if(this.kingCheckStatus(boardState)[team]) {
+        if(this.kingCheckStatus(boardState)[grabbedPiece.team]) {
             return false;
         }
         // Check Path
         for(let i = 1; i < last; i++) {
             let PassedPosition: Position = {x: grabPosition.x + (i*directionX), y: grabPosition.y}
-            if(isOccupied(PassedPosition, boardState) || this.canEnemyAttack(PassedPosition, team, boardState)) {
+            if(isOccupied(PassedPosition, boardState) || this.canEnemyAttack(PassedPosition, grabbedPiece.team, boardState)) {
                 return false;
             }
         }
         // Check Castle
-        if(type === PieceType.KING && grabPosition.y === dropPosition.y && (moved === 2 || moved === last)) {
-            return castleRights[team][side];
+        if(grabbedPiece.type === PieceType.KING && grabPosition.y === dropPosition.y && (moved === 2 || moved === last)) {
+            return castleRights[grabbedPiece.team][side];
         }
         return false;
     }
      
-    isValidMove (grabPosition: Position, dropPosition: Position, type: PieceType, team: TeamType, boardState: Piece[]): boolean {
+    isValidMove (grabPosition: Position, dropPosition: Position, grabbedPiece: Piece, boardState: Piece[]): boolean {
         let isValid = false;
-        switch (type) {
+        switch (grabbedPiece.type) {
             case PieceType.PAWN:
-                isValid = pawnMove(grabPosition, dropPosition, team, boardState);
+                isValid = pawnMove(grabPosition, dropPosition, grabbedPiece.team, boardState);
                 break;
             case PieceType.KNIGHT:
-                isValid = knightMove(grabPosition, dropPosition, team, boardState);
+                isValid = knightMove(grabPosition, dropPosition, grabbedPiece.team, boardState);
                 break;
             case PieceType.BISHOP:
-                isValid = bishopMove(grabPosition, dropPosition, team, boardState);
+                isValid = bishopMove(grabPosition, dropPosition, grabbedPiece.team, boardState);
                 break;
             case PieceType.ROOK:
-                isValid = rookMove(grabPosition, dropPosition, team, boardState);
+                isValid = rookMove(grabPosition, dropPosition, grabbedPiece.team, boardState);
                 break;
             case PieceType.QUEEN:
-                isValid = queenMove(grabPosition, dropPosition, team, boardState);
+                isValid = queenMove(grabPosition, dropPosition, grabbedPiece.team, boardState);
                 break;
             case PieceType.KING:
-                isValid = kingMove(grabPosition, dropPosition, team, boardState);
+                isValid = kingMove(grabPosition, dropPosition, grabbedPiece.team, boardState);
                 break;
         }
         return isValid;
@@ -71,7 +71,7 @@ export default class Arbiter {
         if(white_king && white_king.type) {
             let black_pieces = boardPieces.filter(p => p.team === TeamType.BLACK);
             for (const piece of black_pieces) {
-                if(this.isValidMove(piece.position,white_king.position,piece.type,piece.team,boardPieces)) {
+                if(this.isValidMove(piece.position,white_king.position,piece,boardPieces)) {
                     checkStatus.white = true;
                     break;
                 }
@@ -82,7 +82,7 @@ export default class Arbiter {
         if(black_king) {
             let white_pieces = boardPieces.filter(p => p.team === TeamType.WHITE);
             for (const piece of white_pieces) {
-                if(this.isValidMove(piece.position,black_king.position,piece.type,piece.team,boardPieces)) {
+                if(this.isValidMove(piece.position,black_king.position,piece,boardPieces)) {
                     checkStatus.black = true;
                     break;
                 }
@@ -96,7 +96,7 @@ export default class Arbiter {
             case 'white':
                 let black_pieces = boardPieces.filter(p => p.team === TeamType.BLACK);
                 for (const piece of black_pieces) {
-                    if(this.isValidMove(piece.position,targetPosition,piece.type,piece.team,boardPieces)) {
+                    if(this.isValidMove(piece.position,targetPosition,piece,boardPieces)) {
                         return true;
                     }
                 }
@@ -104,7 +104,7 @@ export default class Arbiter {
             case 'black':
                 let white_pieces = boardPieces.filter(p => p.team === TeamType.WHITE);
                 for (const piece of white_pieces) {
-                    if(this.isValidMove(piece.position,targetPosition,piece.type,piece.team,boardPieces)) {
+                    if(this.isValidMove(piece.position,targetPosition,piece,boardPieces)) {
                         return true;
                     }
                 }
