@@ -2,7 +2,7 @@ import "./Chessboard.css";
 import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights} from "../../Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition} from "../../Constants";
 import Notation from "../Notation/Notation";
 
 export default function Chessboard() {
@@ -22,10 +22,6 @@ export default function Chessboard() {
     });
     const chessboardRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
-
-    function translatePosition(position: Position) {
-        return HORIZONTAL_AXIS[position.x]+VERTICAL_AXIS[position.y];
-    }
 
     function grabPiece(e: React.MouseEvent) {
         let element = e.target as HTMLElement;
@@ -77,111 +73,29 @@ export default function Chessboard() {
             }
             
             if(grabbedPiece) {
-                const pawnDirection = grabbedPiece.team === TeamType.WHITE ? 1 : -1;
-                const enPassantMove = arbiter.isEnPassantMove(grabPosition, dropPosition, grabbedPiece, enPassantTarget);
-                const castleMove = arbiter.isCastleMove(grabPosition, dropPosition, grabbedPiece, boardPieces, castleRights);
-                const validMode = arbiter.isValidMove(grabPosition, dropPosition, grabbedPiece, boardPieces);
-                const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
+                const moveValidation = arbiter.validateMove(grabbedPiece, dropPosition, boardPieces, enPassantTarget, castleRights);
                 const correctTeam = turnTeam === grabbedPiece.team;
-
-                if(correctTeam && enPassantMove) {
-                    const updatedPieces = boardPieces.reduce((results,piece) => {
-                        if(samePosition(piece.position, grabPosition)) {
-                            results.push({...piece, position: dropPosition});
-                        } else if (!samePosition(piece.position,  {x: dropPosition.x, y: dropPosition.y - pawnDirection})) {
-                            results.push(piece);
-                        }
-                        return results;
-                    }, [] as Piece[]);
-                    const kingCheckStatus = arbiter.kingCheckStatus(updatedPieces);
-                    if(kingCheckStatus[grabbedPiece.team]) {
-                        resetActivePiece(activePiece);
-                    } else {
-                        setBoardPieces(updatedPieces);
-                        setEnPassantTarget(false);
-                        addNotation(grabbedPiece,grabPosition,dropPosition);
-                        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-                        setHalfMoves(0);
-                        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
-                    }
-                } else if(correctTeam && castleMove) {
-                    const side = grabPosition.x-dropPosition.x < 0 ? 'king' : 'queen';
-                    const updatedPieces = boardPieces.reduce((results,piece) => {
-                        if(samePosition(piece.position, grabPosition)) {
-                            results.push({...piece,position: {...piece.position,x: (side === 'king' ? piece.position.x+2 : piece.position.x-2)}});
-                        } else if (piece.type === PieceType.ROOK && piece.team === grabbedPiece.team && piece.position.x === (side === 'king' ? 7 : 0)) {
-                            results.push({...piece,position: {...piece.position,x: (side === 'king' ? piece.position.x-2 : piece.position.x+3)}});
-                        } else {
-                            results.push(piece);
-                        }
-                        return results;
-                    }, [] as Piece[]);
-                    const kingCheckStatus = arbiter.kingCheckStatus(updatedPieces);
-                    if(kingCheckStatus[grabbedPiece.team]) {
-                        resetActivePiece(activePiece);
-                    } else {
-                        setBoardPieces(updatedPieces);
-                        castleRights[grabbedPiece.team].king = false
-                        castleRights[grabbedPiece.team].queen = false
-                        setCastleRights(castleRights);
-                        setEnPassantTarget(false);
-                        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-                        setMoves(moves);
-                        setHalfMoves(halfMoves+1);
-                        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
-                        addNotation(grabbedPiece,grabPosition,dropPosition, side === 'king' ? "O-O" : "O-O-O");
-                    }
-                } else if(correctTeam && validMode) {
-                    const updatedPieces = boardPieces.reduce((results,piece) => {
-                        if(samePosition(piece.position, grabPosition)) {                            
-                            if(piece.type === PieceType.PAWN && dropPosition.y === promotionRow) {
-                                modalRef.current?.classList.add("active");
-                                setPromotionPawn(piece);
-                            }
-                            if(piece.type === PieceType.KING) {
-                                castleRights[piece.team].king = false
-                                castleRights[piece.team].queen = false
-                            }
-                            if(piece.type === PieceType.ROOK) {
-                                if(grabPosition.x === 7) {
-                                    castleRights[piece.team].king = false
-                                }
-                                if(grabPosition.x === 0) {
-                                    castleRights[piece.team].queen = false
-                                }
-                            }
-                            setEnPassantTarget(piece.type === PieceType.PAWN && Math.abs(grabPosition.y - dropPosition.y) === 2 ? {x: dropPosition.x, y: dropPosition.y-pawnDirection} : false);
-                            results.push({...piece, position: dropPosition});
-                        } else if (!samePosition(piece.position,  dropPosition)) {
-                            results.push(piece);
-                        } else if (samePosition(piece.position,  dropPosition)) {
-                            if(piece.type === PieceType.ROOK) {
-                                if(dropPosition.x === 7) {
-                                    castleRights[piece.team].king = false
-                                }
-                                if(dropPosition.x === 0) {
-                                    castleRights[piece.team].queen = false
-                                }
-                            }
-                        }
-                        return results;
-                    }, [] as Piece[]);
-                    const kingCheckStatus = arbiter.kingCheckStatus(updatedPieces);
-                    if(kingCheckStatus[grabbedPiece.team]) {
-                        resetActivePiece(activePiece);
-                    } else {
-                        setBoardPieces(updatedPieces);
-                        setCastleRights(castleRights);
-                        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-                        setHalfMoves(grabbedPiece.type === PieceType.PAWN ? 0 : halfMoves+1);
-                        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
-                        addNotation(grabbedPiece,grabPosition,dropPosition, '', kingCheckStatus[grabbedPiece.team === TeamType.WHITE ? "black" : "white"]);
-                    }
+                if(correctTeam && moveValidation.valid) {
+                    completeMove(grabbedPiece, dropPosition,moveValidation);
                 } else {
                     resetActivePiece(activePiece);
                 }
             }
             setActivePiece(null);
+        }
+    }
+
+    function completeMove(grabbedPiece: Piece, dropPosition: Position, moveValidation: ArbiterDecision) {
+        setBoardPieces(moveValidation.newBoard);
+        setEnPassantTarget(moveValidation.enPassantTarget);
+        setCastleRights(moveValidation.castleRights);
+        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
+        setHalfMoves(grabbedPiece.type === PieceType.PAWN || moveValidation.type === MoveType.EN_PASSANT ? 0 : halfMoves+1);
+        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
+        addNotation(grabPosition, dropPosition, moveValidation.notation);
+        if(moveValidation.promotionPawn) {
+            modalRef.current?.classList.add("active");
+            setPromotionPawn(moveValidation.promotionPawn);
         }
     }
 
@@ -192,13 +106,12 @@ export default function Chessboard() {
         activePiece.style.removeProperty("left");
     }
 
-    function addNotation(grabbedPiece: Piece, grabPosition: Position, dropPosition: Position, notation?: string, check?: boolean) {
-        let piece = grabbedPiece.type !== PieceType.PAWN ? (grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase()) : "";
+    function addNotation(grabPosition: Position, dropPosition: Position, notation: string, ) {
         let old_coordinates = translatePosition(grabPosition);
         let new_coordinates = translatePosition(dropPosition);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
-        moves.push(notation ? notation : piece+new_coordinates+(check ? "+" : ""));
+        moves.push(notation);
         setMoves(moves);
         setTimeout(scrollNotation,100)
     }
@@ -212,10 +125,7 @@ export default function Chessboard() {
             return;
         }
         const updatedPieces = boardPieces.reduce((results,piece) => {
-            if(samePosition(piece.position, promotionPawn.position)) {
-                piece.type = Type;
-            }
-            results.push(piece);
+            results.push({...piece, type: samePosition(piece.position, promotionPawn.position) ? Type : piece.type})
             return results;
         }, [] as Piece[]);
         setBoardPieces(updatedPieces);

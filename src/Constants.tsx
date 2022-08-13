@@ -6,10 +6,15 @@ export function samePosition(p1: Position, p2: Position) {
     return p1.x === p2.x && p1.y === p2.y
 }
 
+export function translatePosition(position: Position) {
+    return HORIZONTAL_AXIS[position.x]+VERTICAL_AXIS[position.y];
+}
+
 export interface Position {
     x: number;
     y: number;
 }
+
 export interface Piece {
     position: Position,
     type: PieceType;
@@ -18,14 +23,31 @@ export interface Piece {
 }
 
 export interface CastleRights {
-    black: {
-        king: boolean
-        queen: boolean
-    };
     white: {
         king: boolean
         queen: boolean
     };
+    black: {
+        king: boolean
+        queen: boolean
+    };
+}
+
+export interface KingCheckStatus {
+    white: boolean;
+    black: boolean;
+}
+
+export interface ArbiterDecision {
+    valid: boolean;
+    type?: MoveType;
+    capture?: boolean;
+    notation: string;
+    newBoard: Piece[];
+    kingCheck?: KingCheckStatus;
+    castleRights: CastleRights;
+    enPassantTarget: Position | false;
+    promotionPawn?: Piece
 }
 
 export enum PieceType {
@@ -40,6 +62,12 @@ export enum PieceType {
 export enum TeamType {
     BLACK='black',
     WHITE='white'
+}
+
+export enum MoveType {
+    REGULAR='regular',
+    EN_PASSANT='enPassant',
+    CASTLE='castle'
 }
 
 // Init Board Pieces
