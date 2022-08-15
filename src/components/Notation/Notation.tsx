@@ -20,7 +20,6 @@ export default function Notation ({ moves }: Props){
                 </div>
             )}
         </div>
-        
     );
 };
 

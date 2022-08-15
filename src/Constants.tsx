@@ -33,6 +33,11 @@ export interface CastleRights {
     };
 }
 
+export interface CapturedPieces {
+    white: Array<string>;
+    black: Array<string>;
+}
+
 export interface KingCheckStatus {
     white: boolean;
     black: boolean;
@@ -42,6 +47,7 @@ export interface ArbiterDecision {
     valid: boolean;
     type?: MoveType;
     capture?: boolean;
+    capturedPiece?: string;
     notation: string;
     newBoard: Piece[];
     kingCheck?: KingCheckStatus;

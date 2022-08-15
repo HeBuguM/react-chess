@@ -73,6 +73,7 @@ export default class Arbiter {
             move.valid = true;
             move.capture = true;
             move.enPassantTarget = false;
+            move.capturedPiece = 'pawn'
             move.newBoard = boardState.reduce((results,piece) => {
                 if(samePosition(piece.position, grabbedPiece.position)) {
                     results.push({...piece, position: dropPosition});
@@ -124,6 +125,7 @@ export default class Arbiter {
                 } else if (!samePosition(piece.position,  dropPosition)) {
                     results.push(piece);
                 } else if (samePosition(piece.position,  dropPosition)) {
+                    move.capturedPiece = piece.type;
                     if(piece.type === PieceType.ROOK) {
                         if(dropPosition.x === 7) {
                             move.castleRights[piece.team].king = false;

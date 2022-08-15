@@ -2,10 +2,13 @@ import "./Chessboard.css";
 import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition} from "../../Constants";
 import Notation from "../Notation/Notation";
-import { Button, Grid } from "@mui/material";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition, CapturedPieces} from "../../Constants";
+import { Box, Button, ButtonGroup, Grid, Paper } from "@mui/material";
 import { Stack } from "@mui/system";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBackwardFast, faBackwardStep, faCircle, faFlag, faForwardFast, faForwardStep, faHandshakeSimple, faRetweet } from '@fortawesome/free-solid-svg-icons'
+import Captured from "../Captured/Captured";
 
 export default function Chessboard() {
     const arbiter = new Arbiter();
@@ -17,6 +20,7 @@ export default function Chessboard() {
     const [grabPosition, setGrabPosition] = useState<Position>({ x: -1, y: -1 });
     const [boardPieces, setBoardPieces] = useState<Piece[]>(initialBoardPieces);
     const [moves, setMoves] = useState<Array<string>>([]);
+    const [captured, setCaptured] = useState<CapturedPieces>({white: [],black: []});
     const [enPassantTarget, setEnPassantTarget] = useState<Position | false>(false);
     const [castleRights, setCastleRights] = useState<CastleRights>({
         white: {queen: true, king: true},
@@ -94,7 +98,7 @@ export default function Chessboard() {
         setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
         setHalfMoves(grabbedPiece.type === PieceType.PAWN || moveValidation.type === MoveType.EN_PASSANT ? 0 : halfMoves+1);
         setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
-        addNotation(grabPosition, dropPosition, moveValidation.notation);
+        addNotation(grabbedPiece, dropPosition, moveValidation);
         if(moveValidation.promotionPawn) {
             modalRef.current?.classList.add("active");
             setPromotionPawn(moveValidation.promotionPawn);
@@ -108,13 +112,17 @@ export default function Chessboard() {
         activePiece.style.removeProperty("left");
     }
 
-    function addNotation(grabPosition: Position, dropPosition: Position, notation: string, ) {
+    function addNotation(grabbedPiece: Piece, dropPosition: Position, moveValidation: ArbiterDecision) {
         let old_coordinates = translatePosition(grabPosition);
         let new_coordinates = translatePosition(dropPosition);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
-        moves.push(notation);
+        moves.push(moveValidation.notation);
         setMoves(moves);
+        if(moveValidation.capture && moveValidation.capturedPiece) {
+            captured[grabbedPiece.team].push(moveValidation.capturedPiece);
+            setCaptured(captured);
+        }
         setTimeout(scrollNotation,100)
     }
 
@@ -276,12 +284,38 @@ export default function Chessboard() {
                 </div>
             </Grid>
             <Grid item xs={3}>
-                <Notation moves={moves}/>
-                <div id="turnTeam" className={turnTeam}></div>
-                <Stack direction="row" spacing={2} marginTop={2}>
-                    <Button variant="contained" color="warning" disabled>Offer Draw</Button>
-                    <Button variant="contained" color="error" disabled>Resign</Button>
-                </Stack>
+            <Stack direction="column" height={'100%'} justifyContent="space-between">
+                <Box>
+                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}}>
+                        <Stack direction="row" spacing={2} alignContent="center">
+                            <FontAwesomeIcon icon={faCircle} fontSize="32px" color="black" beatFade={turnTeam === TeamType.BLACK}></FontAwesomeIcon>
+                            <Captured pieces={captured} showTeam={TeamType.BLACK}/>
+                        </Stack>
+                    </Paper>
+                </Box>
+                <Box>
+                    <Notation moves={moves}/>
+                    <ButtonGroup sx={{marginTop: 2}}>
+                        <Button variant="contained" disabled><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" disabled><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" disabled><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" disabled><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" disabled><FontAwesomeIcon icon={faForwardFast} fontSize="24px"></FontAwesomeIcon></Button>
+                    </ButtonGroup>
+                    <Stack direction="row" spacing={2} marginTop={2}>
+                        <Button variant="contained" color="warning" disabled startIcon={<FontAwesomeIcon icon={faHandshakeSimple}></FontAwesomeIcon>}>Offer Draw</Button>
+                        <Button variant="contained" color="error" disabled startIcon={<FontAwesomeIcon icon={faFlag}></FontAwesomeIcon>}>Resign</Button>
+                    </Stack>
+                </Box>
+                <Box>
+                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}}>
+                        <Stack direction="row" spacing={2} alignContent="center">
+                            <FontAwesomeIcon icon={faCircle} fontSize="32px" color="white" beatFade={turnTeam === TeamType.WHITE}></FontAwesomeIcon>
+                            <Captured pieces={captured} showTeam={TeamType.WHITE}/>
+                        </Stack>
+                    </Paper>
+                </Box>
+            </Stack>
             </Grid>
         </Grid>
         <div id="pawn-promotion-modal" ref={modalRef}>
