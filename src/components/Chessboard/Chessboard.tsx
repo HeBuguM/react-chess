@@ -34,7 +34,7 @@ export default function Chessboard() {
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
             element.style.zIndex = "100";
-            element.style.position = "absolute";
+            element.style.position = "fixed";
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
 
@@ -57,7 +57,7 @@ export default function Chessboard() {
             const maxY = chessboard.offsetTop + chessboard.clientHeight - (SQUARE_SIZE/2);
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
-            activePiece.style.position = "absolute";
+            activePiece.style.position = "fixed";
             activePiece.style.left = x < minX ? `${minX}px` : (x > maxX ? `${maxX}px` : `${x}px`)
             activePiece.style.top = y < minY ? `${minY}px` : (y > maxY ? `${maxY}px` : `${y}px`)
         }
@@ -226,6 +226,16 @@ export default function Chessboard() {
             board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
         }
     }
+
+    // // Flipped
+    // for(let j = 0; j < 8; j++) {
+    //     for(let i = VERTICAL_AXIS.length - 1; i >= 0; i--) {
+    //         const square = i + j + 2;
+    //         const piece = boardPieces.find(p => samePosition(p.position, {x: i, y: j}))
+    //         let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
+    //         board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
+    //     }
+    // }
 
     // Render Board Labels
     let horizontalLabels = [];

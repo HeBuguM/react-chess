@@ -1,8 +1,5 @@
 #chessboard .square {
     display: grid;
-    place-content: center;
-    width: 100px;
-    height: 100px;
 } 
 #chessboard .square.dark {
     background-color: #5da2b5;
@@ -19,7 +16,7 @@
 #chessboard .square .chess-piece {
     width: 100px;
     height: 100px;
-    background-size: 90px;
+    background-size: 90%;
     background-position: center;
     background-repeat: no-repeat;
     z-index: 90;

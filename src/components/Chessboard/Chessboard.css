@@ -1,40 +1,37 @@
 #chessboard {
-    /* position: relative; */
+    position: relative;
     display: grid;
     grid-template-columns: repeat(8, 100px);
     grid-template-rows: repeat(8, 100px);
     grid-column-start: (8);
     background-color: #ddd;
-    width: 800px;
-    height: 800px;
     margin: auto;
     align-content: center;
     justify-content: center;
     overflow: hidden;
 }
 #chessboard .horizontalLabels {
+    width: 100%;
     -webkit-user-select: none; /* Safari */        
     -moz-user-select: none; /* Firefox */
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
     display: flex;
     justify-content: space-evenly;
-    width: 800px;
-    height: 20px;
     position: absolute;
-    bottom: calc(50% - 420px);
-    left: calc(50% - 400px);
+    bottom: 0;
+    left: 0;
     text-align: right;
-    font-size: 20px;
+    font-size: 16px;
 }
 #chessboard .horizontalLabels div {
     width: 100px;
-    padding-right: 5px;
     color: #ddd;
+    padding: 0px 4px;
 }
-/* #chessboard .horizontalLabels div:nth-child(2n){
+#chessboard .horizontalLabels div:nth-child(2n){
     color: #6f6f6f;
-} */
+}
 
 #chessboard .verticalLabels {
     -webkit-user-select: none; /* Safari */        
@@ -42,22 +39,21 @@
     -ms-user-select: none; /* IE10+/Edge */
     user-select: none; /* Standard */
     display: flex;
-    height: 800px;
-    width: 20px;
+    height: 100%;
     position: absolute;
-    top: calc(50% - 400px);
-    left: calc(50% - 420px);
+    top: 0;
+    left: 0;
     flex-direction: column-reverse;
-    font-size: 20px;
+    font-size: 16px;
 }
 #chessboard .verticalLabels div {
     height: 100px;
-    width: 20px;
     color: #ddd;
+    padding-left: 4px;
 }
-/* #chessboard .verticalLabels div:nth-child(2n){
+#chessboard .verticalLabels div:nth-child(2n){
     color: #6f6f6f;
-} */
+}
 
 #pawn-promotion-modal {
     display: none;
@@ -78,7 +74,6 @@
     position: absolute;
     height: 200px;
     width: 800px;
-    
     top: calc(50% - 100px);
     left: calc(50% - 400px);
 }
