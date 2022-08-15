@@ -1,12 +1,11 @@
-import React from 'react';
-import './App.css';
+import { Container } from '@mui/system';
 import Chessboard from './components/Chessboard/Chessboard';
 
 const App = () => {
   return (
-    <div className="app">
+    <Container maxWidth="xl">
       <Chessboard/>
-    </div>
+    </Container>
   )
 }
 

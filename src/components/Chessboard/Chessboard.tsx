@@ -4,6 +4,8 @@ import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition} from "../../Constants";
 import Notation from "../Notation/Notation";
+import { Button, Grid } from "@mui/material";
+import { Stack } from "@mui/system";
 
 export default function Chessboard() {
     const arbiter = new Arbiter();
@@ -251,21 +253,37 @@ export default function Chessboard() {
 
     return (
         <>
-        <div id="FEN">
-            <input type="text" value={generateFEN()} readOnly/>
-            <button className="loadFEN" onClick={loadFEN}>Load</button>
-        </div>
-        <div 
-            id="chessboard"
-            ref={chessboardRef}
-            onMouseMove={e => movePiece(e)}
-            onMouseDown={e => grabPiece(e)}
-            onMouseUp={e => dropPiece(e)}
-        >
-            {board}
-            <div className="horizontalLabels">{horizontalLabels}</div>
-            <div className="verticalLabels">{verticalLabels}</div>
-        </div>
+        <Grid container>
+            <Grid item xs={9} marginTop={1} marginBottom={1}>
+                <div id="FEN">
+                    <input type="text" value={generateFEN()} readOnly/>
+                    <button className="loadFEN" onClick={loadFEN}>Load</button>
+                </div>
+            </Grid>
+        </Grid>
+        <Grid container spacing={2}>
+            <Grid item xs={9}>
+                <div 
+                    id="chessboard"
+                    ref={chessboardRef}
+                    onMouseMove={e => movePiece(e)}
+                    onMouseDown={e => grabPiece(e)}
+                    onMouseUp={e => dropPiece(e)}
+                >
+                    {board}
+                    <div className="horizontalLabels">{horizontalLabels}</div>
+                    <div className="verticalLabels">{verticalLabels}</div>
+                </div>
+            </Grid>
+            <Grid item xs={3}>
+                <Notation moves={moves}/>
+                <div id="turnTeam" className={turnTeam}></div>
+                <Stack direction="row" spacing={2} marginTop={2}>
+                    <Button variant="contained" color="warning" disabled>Offer Draw</Button>
+                    <Button variant="contained" color="error" disabled>Resign</Button>
+                </Stack>
+            </Grid>
+        </Grid>
         <div id="pawn-promotion-modal" ref={modalRef}>
             <div className="modal-body">
                 <img onClick={() => promotePawn(PieceType.QUEEN,'queen')} src={`assets/images/queen_${promotionPawnTeam()}.png`} alt="Queen"/>
@@ -274,8 +292,6 @@ export default function Chessboard() {
                 <img onClick={() => promotePawn(PieceType.KNIGHT,'knight')} src={`assets/images/knight_${promotionPawnTeam()}.png`} alt="Knight"/>
             </div>
         </div>
-        <Notation moves={moves}/>
-        <div id="turnTeam" className={turnTeam}></div>
         </>
     );
 }

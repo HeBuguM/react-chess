@@ -2,11 +2,7 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    width: 150px;
     height: 400px;
-    position: absolute;
-    top: calc(50% - 200px);
-    right: calc(50% - 560px);
     align-content: flex-start;
     background: #41403d;
     color: #bcbcbb;
@@ -28,11 +24,12 @@
     width: 100%;
 }
 #notation .fullMove div {
-    width: 50px;
+    width: 50%;
     padding: 5px;
     text-align: center;
 }
 #notation .fullMove .moveNo {
-    width: 20px;
+    width: 50px;
     background: #302f2d;
+    border-right: 1px solid #646460;
 }
