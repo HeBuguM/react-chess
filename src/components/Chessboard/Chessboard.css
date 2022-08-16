@@ -6,11 +6,7 @@
     grid-template-columns: repeat(8, 100px);
     grid-template-rows: repeat(8, 100px);
     background-color: #ddd;
-    margin: auto;
-    align-content: center;
-    justify-content: center;
     overflow: hidden;
-    
 }
 #chessboard .horizontalLabels {
     width: 100%;
@@ -128,27 +124,4 @@ button.loadFEN {
 }
 button.loadFEN:hover {
     background-color: #585856;
-}
-
-#turnTeam {
-    margin-top: 20px;
-    height: 100px;
-}
-#turnTeam::before {
-    display: block;
-    content: "TURN";
-    width: 100%;
-    line-height: 100px;
-    font-size: 3rem;
-    opacity: 0.3;
-    text-align: center;
-}
-#turnTeam.white {
-    background: white;
-    color: black;
-    content: "Black to Move"
-}
-#turnTeam.black {
-    background: black;
-    color: white;
 }

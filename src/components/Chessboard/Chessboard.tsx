@@ -262,15 +262,15 @@ export default function Chessboard() {
     return (
         <>
         <Grid container>
-            <Grid item xs={9} marginTop={1} marginBottom={1}>
+            <Grid item xs={10} marginTop={1} marginBottom={1}>
                 <div id="FEN">
                     <input type="text" value={generateFEN()} readOnly/>
                     <button className="loadFEN" onClick={loadFEN}>Load</button>
                 </div>
             </Grid>
         </Grid>
-        <Grid container spacing={2}>
-            <Grid item xs={9}>
+        <Stack direction="row" spacing={2} justifyContent="center">
+            <Box display={"flex"}>
                 <div 
                     id="chessboard"
                     ref={chessboardRef}
@@ -282,11 +282,10 @@ export default function Chessboard() {
                     <div className="horizontalLabels">{horizontalLabels}</div>
                     <div className="verticalLabels">{verticalLabels}</div>
                 </div>
-            </Grid>
-            <Grid item xs={3}>
-            <Stack direction="column" height={'100%'} justifyContent="space-between">
+            </Box>
+            <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={300}>
                 <Box>
-                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}}>
+                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}} elevation={turnTeam === TeamType.BLACK ? 3 : 1}>
                         <Stack direction="row" spacing={2} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color="black" beatFade={turnTeam === TeamType.BLACK}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={TeamType.BLACK}/>
@@ -308,16 +307,15 @@ export default function Chessboard() {
                     </Stack>
                 </Box>
                 <Box>
-                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}}>
+                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}} elevation={turnTeam === TeamType.WHITE ? 3 : 1}>
                         <Stack direction="row" spacing={2} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color="white" beatFade={turnTeam === TeamType.WHITE}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={TeamType.WHITE}/>
                         </Stack>
                     </Paper>
                 </Box>
-            </Stack>
-            </Grid>
-        </Grid>
+            </Box>
+        </Stack>
         <div id="pawn-promotion-modal" ref={modalRef}>
             <div className="modal-body">
                 <img onClick={() => promotePawn(PieceType.QUEEN,'queen')} src={`assets/images/queen_${promotionPawnTeam()}.png`} alt="Queen"/>
