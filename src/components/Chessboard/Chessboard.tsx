@@ -12,6 +12,7 @@ import Captured from "../Captured/Captured";
 
 export default function Chessboard() {
     const arbiter = new Arbiter();
+    const [boardFlipped, setBoardFlipped] = useState<boolean>(false);
     const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
     const [promotionPawn, setPromotionPawn] = useState<Piece>();
     const [turnTeam, setTurnTeam] = useState<TeamType>(TeamType.WHITE);
@@ -238,24 +239,26 @@ export default function Chessboard() {
 
     // Render Board
     let board = [];
-    for(let j = HORIZONTAL_AXIS.length - 1; j >= 0; j--) {
-        for(let i = 0; i < VERTICAL_AXIS.length; i++) {
-            const square = i + j + 2;
-            const piece = boardPieces.find(p => samePosition(p.position, {x: i, y: j}))
-            let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
-            board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
+    if(boardFlipped === false) {
+        for(let j = HORIZONTAL_AXIS.length - 1; j >= 0; j--) {
+            for(let i = 0; i < VERTICAL_AXIS.length; i++) {
+                const square = i + j + 2;
+                const piece = boardPieces.find(p => samePosition(p.position, {x: i, y: j}))
+                let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
+                board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
+            }
+        }
+    } else {
+        // Flipped
+        for(let j = 0; j < 8; j++) {
+            for(let i = VERTICAL_AXIS.length - 1; i >= 0; i--) {
+                const square = i + j + 2;
+                const piece = boardPieces.find(p => samePosition(p.position, {x: i, y: j}))
+                let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
+                board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
+            }
         }
     }
-
-    // // Flipped
-    // for(let j = 0; j < 8; j++) {
-    //     for(let i = VERTICAL_AXIS.length - 1; i >= 0; i--) {
-    //         const square = i + j + 2;
-    //         const piece = boardPieces.find(p => samePosition(p.position, {x: i, y: j}))
-    //         let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
-    //         board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
-    //     }
-    // }
 
     // Render Board Labels
     let horizontalLabels = [];
