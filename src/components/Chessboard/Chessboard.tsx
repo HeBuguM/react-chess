@@ -285,10 +285,10 @@ export default function Chessboard() {
                     <div className="verticalLabels">{verticalLabels}</div>
                 </div>
             </Box>
-            <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={300}>
+            <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={350}>
                 <Box>
                     <Paper sx={{padding: '10px'}} elevation={turnTeam === TeamType.BLACK ? 3 : 1}>
-                        <Stack direction="row" spacing={2} alignContent="center">
+                        <Stack direction="row" spacing={1} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color="black" beatFade={turnTeam === TeamType.BLACK}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={TeamType.BLACK}/>
                         </Stack>
@@ -311,7 +311,7 @@ export default function Chessboard() {
                 </Box>
                 <Box>
                     <Paper sx={{padding: '10px'}} elevation={turnTeam === TeamType.WHITE ? 3 : 1}>
-                        <Stack direction="row" spacing={2} alignContent="center">
+                        <Stack direction="row" spacing={1} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color="white" beatFade={turnTeam === TeamType.WHITE}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={TeamType.WHITE}/>
                         </Stack>

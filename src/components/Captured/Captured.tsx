@@ -7,6 +7,16 @@ interface Props {
     showTeam: TeamType;
 }
 
+const pieceOrder = ['pawn', 'bishop', 'knight', 'rook', 'queen'];
+const pieceSort = (arr:any, desiredOrder:any) => {
+    const orderForIndexVals = desiredOrder.slice(0).reverse();
+    arr.sort((a:any, b:any) => {
+        const aIndex = -orderForIndexVals.indexOf(a);
+        const bIndex = -orderForIndexVals.indexOf(b);
+        return aIndex - bIndex;
+    });
+}
+
 export default function Captured ({ pieces, showTeam }: Props){ 
     let score = {
         white: 0,
@@ -33,31 +43,38 @@ export default function Captured ({ pieces, showTeam }: Props){
                 return 0;
         }
     }
-
-    function getFig(piece: string) {
+    
+    function getFig(piece: string, last: string) {
         switch (piece) {
             case PieceType.PAWN:
-                return <FontAwesomeIcon icon={faChessPawn} color={'gray'} fontSize="24px" style={{margin: '5px 1px 0px 0px'}}></FontAwesomeIcon>
+                return <FontAwesomeIcon icon={faChessPawn} color={'gray'} fontSize="22px" style={{margin: `6px 0px 0px ${last !== piece ? 5 : -1}px`}}></FontAwesomeIcon>
             case PieceType.KNIGHT:
-                return <FontAwesomeIcon icon={faChessKnight} color={'gray'} fontSize="24px" style={{margin: '5px 1px 0px 0px'}}></FontAwesomeIcon>
+                return <FontAwesomeIcon icon={faChessKnight} color={'gray'} fontSize="22px" style={{margin: `6px 0px 0px ${last !== piece ? 5 : -1}px`}}></FontAwesomeIcon>
             case PieceType.BISHOP:
-                return <FontAwesomeIcon icon={faChessBishop} color={'gray'} fontSize="24px" style={{margin: '5px 1px 0px 0px'}}></FontAwesomeIcon>
+                return <FontAwesomeIcon icon={faChessBishop} color={'gray'} fontSize="22px" style={{margin: `6px 0px 0px ${last !== piece ? 5 : -1}px`}}></FontAwesomeIcon>
             case PieceType.ROOK:
-                return <FontAwesomeIcon icon={faChessRook} color={'gray'} fontSize="24px" style={{margin: '5px 1px 0px 0px'}}></FontAwesomeIcon>
+                return <FontAwesomeIcon icon={faChessRook} color={'gray'} fontSize="22px" style={{margin: `6px 0px 0px ${last !== piece ? 5 : -1}px`}}></FontAwesomeIcon>
             case PieceType.QUEEN:
-                return <FontAwesomeIcon icon={faChessQueen} color={'gray'} fontSize="24px" style={{margin: '5px 1px 0px 0px'}}></FontAwesomeIcon>
+                return <FontAwesomeIcon icon={faChessQueen} color={'gray'} fontSize="22px" style={{margin: `6px 0px 0px ${last !== piece ? 5 : -1}px`}}></FontAwesomeIcon>
             default:
                 return <></>
         }
     }
 
+    pieceSort(pieces.white, pieceOrder);
+    pieceSort(pieces.black, pieceOrder);
+
+    let last_peace = '';
     pieces.white.forEach(piece => {
         score.white = score.white + getValue(piece);
-        figs.white.push(getFig(piece))
+        figs.white.push(getFig(piece,last_peace))
+        last_peace = piece;
     })
+    last_peace = '';
     pieces.black.forEach(piece => {
         score.black = score.black + getValue(piece);
-        figs.black.push(getFig(piece))
+        figs.black.push(getFig(piece,last_peace))
+        last_peace = piece;
     })
 
     return (
