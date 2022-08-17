@@ -10,8 +10,8 @@ export function translatePosition(position: Position) {
     return HORIZONTAL_AXIS[position.x]+VERTICAL_AXIS[position.y];
 }
 
-export const moveSound = new Audio("/assets/sounds/Move.mp3");
-export const captureSound = new Audio("/assets/sounds/Capture.mp3");
+export const moveSound = new Audio("assets/sounds/Move.mp3");
+export const captureSound = new Audio("assets/sounds/Capture.mp3");
 
 export interface Position {
     x: number;
