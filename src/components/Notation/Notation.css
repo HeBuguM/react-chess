@@ -2,9 +2,8 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    height: 400px;
+    height: 350px;
     align-content: flex-start;
-    background: #41403d;
     color: #bcbcbb;
     overflow: auto;
     scrollbar-width: thin;
@@ -17,7 +16,7 @@
 }
 #notation::-webkit-scrollbar-thumb {
     background: #838382;
-  }
+}
 #notation .fullMove {
     display: flex;
     justify-content: space-around;

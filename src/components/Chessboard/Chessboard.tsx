@@ -4,10 +4,10 @@ import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import Notation from "../Notation/Notation";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition, CapturedPieces} from "../../Constants";
-import { Box, Button, ButtonGroup, Grid, Paper } from "@mui/material";
+import { Box, Button, ButtonGroup, Dialog, DialogContent, DialogContentText, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBackwardFast, faBackwardStep, faCircle, faFlag, faForwardFast, faForwardStep, faHandshakeSimple, faRetweet } from '@fortawesome/free-solid-svg-icons'
+import { faBackwardFast, faBackwardStep, faCircle, faFlag, faForwardFast, faForwardStep, faHandshakeSimple, faPenToSquare, faRetweet, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 import Captured from "../Captured/Captured";
 
 export default function Chessboard() {
@@ -28,6 +28,16 @@ export default function Chessboard() {
     });
     const chessboardRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
+
+    const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+    const handleClickOpen = () => {
+        setShareDialogOpen(true);
+    };
+
+    const handleClose = () => {
+        setShareDialogOpen(false);
+    };
 
     function grabPiece(e: React.MouseEvent) {
         let element = e.target as HTMLElement;
@@ -261,14 +271,6 @@ export default function Chessboard() {
 
     return (
         <>
-        <Grid container>
-            <Grid item xs={10} marginTop={1} marginBottom={1}>
-                <div id="FEN">
-                    <input type="text" value={generateFEN()} readOnly/>
-                    <button className="loadFEN" onClick={loadFEN}>Load</button>
-                </div>
-            </Grid>
-        </Grid>
         <Stack direction="row" spacing={2} justifyContent="center">
             <Box display={"flex"}>
                 <div 
@@ -285,7 +287,7 @@ export default function Chessboard() {
             </Box>
             <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={300}>
                 <Box>
-                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}} elevation={turnTeam === TeamType.BLACK ? 3 : 1}>
+                    <Paper sx={{padding: '10px'}} elevation={turnTeam === TeamType.BLACK ? 3 : 1}>
                         <Stack direction="row" spacing={2} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color="black" beatFade={turnTeam === TeamType.BLACK}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={TeamType.BLACK}/>
@@ -294,20 +296,21 @@ export default function Chessboard() {
                 </Box>
                 <Box>
                     <Notation moves={moves}/>
-                    <ButtonGroup sx={{marginTop: 2}}>
-                        <Button variant="contained" disabled><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained" disabled><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained" disabled><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained" disabled><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained" disabled><FontAwesomeIcon icon={faForwardFast} fontSize="24px"></FontAwesomeIcon></Button>
+                    <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
+                        <Button variant="contained"><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained"><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained"><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained"><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained"><FontAwesomeIcon icon={faForwardFast} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={handleClickOpen}><FontAwesomeIcon icon={faShareNodes} fontSize="24px"></FontAwesomeIcon></Button>
                     </ButtonGroup>
-                    <Stack direction="row" spacing={2} marginTop={2}>
-                        <Button variant="contained" color="warning" disabled startIcon={<FontAwesomeIcon icon={faHandshakeSimple}></FontAwesomeIcon>}>Offer Draw</Button>
-                        <Button variant="contained" color="error" disabled startIcon={<FontAwesomeIcon icon={faFlag}></FontAwesomeIcon>}>Resign</Button>
-                    </Stack>
+                    <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
+                        <Button variant="contained" color="warning"  startIcon={<FontAwesomeIcon icon={faHandshakeSimple}></FontAwesomeIcon>}>Offer Draw</Button>
+                        <Button variant="contained" color="error"  startIcon={<FontAwesomeIcon icon={faFlag}></FontAwesomeIcon>}>Resign</Button>
+                    </ButtonGroup>
                 </Box>
                 <Box>
-                    <Paper sx={{backgroundColor: '#41403d',padding: '10px'}} elevation={turnTeam === TeamType.WHITE ? 3 : 1}>
+                    <Paper sx={{padding: '10px'}} elevation={turnTeam === TeamType.WHITE ? 3 : 1}>
                         <Stack direction="row" spacing={2} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color="white" beatFade={turnTeam === TeamType.WHITE}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={TeamType.WHITE}/>
@@ -316,6 +319,22 @@ export default function Chessboard() {
                 </Box>
             </Box>
         </Stack>
+        <Dialog
+            open={shareDialogOpen}
+            onClose={handleClose}
+            maxWidth="md"
+            fullWidth
+        >
+            <DialogContent>
+                <DialogContentText id="alert-dialog-description">
+                    <Stack direction="row" spacing={2} alignContent="center">
+                        <TextField id="outlined-basic" label="FEN" variant="outlined" value={generateFEN()} fullWidth disabled />
+                        <Button variant="outlined" onClick={loadFEN}><FontAwesomeIcon icon={faPenToSquare} fontSize="24px"></FontAwesomeIcon></Button>
+                    </Stack>
+                </DialogContentText>
+            </DialogContent>
+        </Dialog>
+
         <div id="pawn-promotion-modal" ref={modalRef}>
             <div className="modal-body">
                 <img onClick={() => promotePawn(PieceType.QUEEN,'queen')} src={`assets/images/queen_${promotionPawnTeam()}.png`} alt="Queen"/>

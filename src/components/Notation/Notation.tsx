@@ -1,3 +1,4 @@
+import { Paper } from "@mui/material";
 import "./Notation.css";
 
 interface Props {
@@ -11,7 +12,7 @@ export default function Notation ({ moves }: Props){
         full_moves.push(chunk);
     }
     return (
-        <div id="notation">
+        <Paper id="notation">
             {full_moves.map((moves,i) => 
                 <div className="fullMove" key={i}>
                     <div className="moveNo">{i+1}</div>
@@ -19,7 +20,7 @@ export default function Notation ({ moves }: Props){
                     <div className="moveBlack">{moves[1]}</div>
                 </div>
             )}
-        </div>
+        </Paper>
     );
 };
 
