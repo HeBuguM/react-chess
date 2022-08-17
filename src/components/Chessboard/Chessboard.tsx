@@ -284,8 +284,8 @@ export default function Chessboard() {
                     onMouseUp={e => dropPiece(e)}
                 >
                     {board}
-                    <div className="horizontalLabels">{horizontalLabels}</div>
-                    <div className="verticalLabels">{verticalLabels}</div>
+                    <div className="horizontalLabels" style={{flexDirection: boardFlipped ? "row-reverse" : "row"}}>{horizontalLabels}</div>
+                    <div className="verticalLabels" style={{flexDirection: boardFlipped ? "column" : "column-reverse"}}>{verticalLabels}</div>
                 </div>
             </Box>
             <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={350}>
@@ -300,7 +300,7 @@ export default function Chessboard() {
                 <Box>
                     <Notation moves={moves}/>
                     <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
-                        <Button variant="contained"><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={() => setBoardFlipped(!boardFlipped)}><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
