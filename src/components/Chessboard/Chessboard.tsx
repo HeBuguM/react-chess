@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import Notation from "../Notation/Notation";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition, CapturedPieces} from "../../Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound} from "../../Constants";
 import { Box, Button, ButtonGroup, Dialog, DialogContent, DialogContentText, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -114,6 +114,7 @@ export default function Chessboard() {
             modalRef.current?.classList.add("active");
             setPromotionPawn(moveValidation.promotionPawn);
         }
+        moveValidation.capture ? captureSound.play() : moveSound.play();
     }
 
     function resetActivePiece(activePiece:HTMLElement) {
