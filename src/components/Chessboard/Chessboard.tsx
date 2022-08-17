@@ -45,8 +45,8 @@ export default function Chessboard() {
         const chessboard = chessboardRef.current;
         if(element.classList.contains("chess-piece") && chessboard) {
             setGrabPosition({
-                x: Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE),
-                y: Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE))}
+                x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
+                y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))}
             );
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
@@ -85,8 +85,8 @@ export default function Chessboard() {
         if(activePiece && chessboard) {
             const grabbedPiece = boardPieces.find(p => p.position.x === grabPosition.x && p.position.y === grabPosition.y);
             const dropPosition: Position = {
-                x: Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE),
-                y: Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE))
+                x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
+                y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
             }
             
             if(grabbedPiece) {
@@ -290,10 +290,10 @@ export default function Chessboard() {
             </Box>
             <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={350}>
                 <Box>
-                    <Paper sx={{padding: '10px'}} elevation={turnTeam === TeamType.BLACK ? 3 : 1}>
+                    <Paper sx={{padding: '10px'}} elevation={turnTeam === (boardFlipped ? TeamType.WHITE : TeamType.BLACK) ? 3 : 1}>
                         <Stack direction="row" spacing={1} alignContent="center">
-                            <FontAwesomeIcon icon={faCircle} fontSize="32px" color="black" beatFade={turnTeam === TeamType.BLACK}></FontAwesomeIcon>
-                            <Captured pieces={captured} showTeam={TeamType.BLACK}/>
+                            <FontAwesomeIcon icon={faCircle} fontSize="32px" color={boardFlipped ? TeamType.WHITE : TeamType.BLACK} beatFade={turnTeam === (boardFlipped ? TeamType.WHITE : TeamType.BLACK)}></FontAwesomeIcon>
+                            <Captured pieces={captured} showTeam={(boardFlipped ? TeamType.WHITE : TeamType.BLACK)}/>
                         </Stack>
                     </Paper>
                 </Box>
@@ -313,10 +313,10 @@ export default function Chessboard() {
                     </ButtonGroup>
                 </Box>
                 <Box>
-                    <Paper sx={{padding: '10px'}} elevation={turnTeam === TeamType.WHITE ? 3 : 1}>
+                    <Paper sx={{padding: '10px'}} elevation={turnTeam === (!boardFlipped ? TeamType.WHITE : TeamType.BLACK) ? 3 : 1}>
                         <Stack direction="row" spacing={1} alignContent="center">
-                            <FontAwesomeIcon icon={faCircle} fontSize="32px" color="white" beatFade={turnTeam === TeamType.WHITE}></FontAwesomeIcon>
-                            <Captured pieces={captured} showTeam={TeamType.WHITE}/>
+                            <FontAwesomeIcon icon={faCircle} fontSize="32px" color={!boardFlipped ? TeamType.WHITE : TeamType.BLACK} beatFade={turnTeam === (!boardFlipped ? TeamType.WHITE : TeamType.BLACK)}></FontAwesomeIcon>
+                            <Captured pieces={captured} showTeam={(!boardFlipped ? TeamType.WHITE : TeamType.BLACK)}/>
                         </Stack>
                     </Paper>
                 </Box>
