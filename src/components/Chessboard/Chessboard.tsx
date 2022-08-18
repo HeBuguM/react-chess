@@ -40,6 +40,21 @@ export default function Chessboard() {
         setShareDialogOpen(false);
     };
 
+    function drawArrow(e: React.MouseEvent) {
+        if(cancelGrabPiece() === false) {
+            console.log("Right Click")
+        }
+    }
+
+    function cancelGrabPiece() {
+        if(activePiece) {
+            resetActivePiece(activePiece)
+            setActivePiece(null);
+            return true;
+        }
+        return false;
+    }
+
     function grabPiece(e: React.MouseEvent) {
         let element = e.target as HTMLElement;
         const chessboard = chessboardRef.current;
@@ -281,8 +296,8 @@ export default function Chessboard() {
                     id="chessboard"
                     ref={chessboardRef}
                     onMouseMove={e => movePiece(e)}
-                    onMouseDown={e => grabPiece(e)}
-                    onMouseUp={e => dropPiece(e)}
+                    onMouseDown={e => e.button === 0 ? grabPiece(e) : (e.button === 2 ? drawArrow(e) : null)}
+                    onMouseUp={e => e.button === 0 ? dropPiece(e) : cancelGrabPiece()}
                 >
                     {board}
                     <div className="horizontalLabels" style={{flexDirection: boardFlipped ? "row-reverse" : "row"}}>{horizontalLabels}</div>
