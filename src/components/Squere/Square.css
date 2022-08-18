@@ -1,5 +1,9 @@
 #chessboard .square {
     display: grid;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 } 
 #chessboard .square.dark {
     background-color: #5da2b5;
