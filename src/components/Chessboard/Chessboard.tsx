@@ -4,7 +4,7 @@ import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import Notation from "../Notation/Notation";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound} from "../../Constants";
-import { Box, Button, ButtonGroup, Dialog, DialogContent, DialogContentText, Paper, TextField } from "@mui/material";
+import { Box, Button, ButtonGroup, Dialog, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBackwardFast, faBackwardStep, faCircle, faFlag, faForwardFast, faForwardStep, faHandshakeSimple, faPenToSquare, faRetweet, faShareNodes } from '@fortawesome/free-solid-svg-icons'
@@ -356,18 +356,17 @@ export default function Chessboard() {
             onClose={handleClose}
             maxWidth="md"
             fullWidth
+           
         >
-            <DialogContent>
-                <DialogContentText id="alert-dialog-description">
-                    <Stack direction="row" spacing={2} alignContent="center">
-                        <TextField id="outlined-basic" label="FEN" variant="outlined" value={generateFEN()} fullWidth />
-                        <Button variant="outlined" onClick={loadFEN}><FontAwesomeIcon icon={faPenToSquare} fontSize="24px"></FontAwesomeIcon></Button>
-                    </Stack>
-                    <Stack direction="row" spacing={2} alignContent="center" marginTop={2}>
-                        <TextField id="outlined-basic" label="PGN" variant="outlined" value={generatePGN()} fullWidth  multiline maxRows={4}/>
-                    </Stack>
-                </DialogContentText>
-            </DialogContent>
+            <Box sx={{margin: 3}}>
+                <Stack direction="row" spacing={2} alignContent="center">
+                    <TextField id="outlined-basic" label="FEN" variant="outlined" value={generateFEN()} fullWidth />
+                    <Button variant="outlined" onClick={loadFEN}><FontAwesomeIcon icon={faPenToSquare} fontSize="24px"></FontAwesomeIcon></Button>
+                </Stack>
+                <Stack direction="row" spacing={2} alignContent="center" marginTop={2}>
+                    <TextField id="outlined-basic" label="PGN" variant="outlined" value={generatePGN()} fullWidth  multiline maxRows={4}/>
+                </Stack>
+            </Box>
         </Dialog>
 
         <div id="pawn-promotion-modal" ref={modalRef}>
