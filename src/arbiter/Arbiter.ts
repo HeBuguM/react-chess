@@ -141,7 +141,7 @@ export default class Arbiter {
 
         move.kingCheck = this.kingCheckStatus(move.newBoard);
         move.valid = move.kingCheck[grabbedPiece.team] ? false : move.valid;
-        move.notation = this.generateNotation(grabbedPiece, dropPosition, move);
+        move.notation = this.generateNotation(grabbedPiece,dropPosition,boardState,enPassantTarget,move);
         console.log(move);
         return move;
     }
@@ -176,14 +176,29 @@ export default class Arbiter {
         return checkStatus;
     }
 
-    generateNotation(grabbedPiece: Piece, dropPosition: Position, move: ArbiterDecision) {
+    generateNotation(grabbedPiece: Piece, dropPosition: Position, boardPieces: Piece[], enPassantTarget: Position | false, move: ArbiterDecision) {
+        let coordinates = translatePosition(dropPosition);
         let check_sign = move.kingCheck && move.kingCheck[grabbedPiece.team === TeamType.WHITE ? "black" : "white"] ? "+":"";
+        let capture = move.capture ? "x" : "";
+        let piece = "";
+
         if(move.type === MoveType.CASTLE) {
             return grabbedPiece.position.x-dropPosition.x < 0 ? 'O-O' : 'O-O-O' + check_sign;
         } else {
-            let piece = grabbedPiece.type !== PieceType.PAWN ? (grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase()) : "";
-            let new_coordinates = translatePosition(dropPosition);
-            return piece+(move.capture ? "x" : "")+new_coordinates+check_sign;
+            if(grabbedPiece.type === PieceType.PAWN) {
+                if(move.capture) {
+                    piece = translatePosition(grabbedPiece.position,"x");
+                }
+            } else {
+                piece = grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase();
+                if(grabbedPiece.type === PieceType.KNIGHT || grabbedPiece.type === PieceType.ROOK) {
+                    let other_piece = boardPieces.find(p => p.type === grabbedPiece.type && p.team === grabbedPiece.team && !samePosition(p.position, grabbedPiece.position));
+                    if(other_piece && this.isRegularMove(other_piece,dropPosition,boardPieces)) {
+                        piece = piece + (grabbedPiece.position.x !== other_piece.position.x ? translatePosition(grabbedPiece.position,"x") : translatePosition(grabbedPiece.position,"y"));
+                    }
+                }
+            }
+            return piece+capture+coordinates+check_sign;
         }
     }
 

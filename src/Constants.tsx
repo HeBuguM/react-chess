@@ -6,8 +6,15 @@ export function samePosition(p1: Position, p2: Position) {
     return p1.x === p2.x && p1.y === p2.y
 }
 
-export function translatePosition(position: Position) {
-    return HORIZONTAL_AXIS[position.x]+VERTICAL_AXIS[position.y];
+export function translatePosition(position: Position, axis?: "x" | "y") {
+    switch (axis) {
+        case "x":
+            return HORIZONTAL_AXIS[position.x];
+        case "y":
+            return VERTICAL_AXIS[position.y];
+        default:
+            return HORIZONTAL_AXIS[position.x]+VERTICAL_AXIS[position.y];
+    }
 }
 
 export const moveSound = new Audio("assets/sounds/Move.mp3");
