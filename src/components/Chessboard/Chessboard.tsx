@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import Notation from "../Notation/Notation";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, MoveType, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound} from "../../Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound} from "../../Constants";
 import { Box, Button, ButtonGroup, Dialog, DialogContent, DialogContentText, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -122,7 +122,7 @@ export default function Chessboard() {
         setEnPassantTarget(moveValidation.enPassantTarget);
         setCastleRights(moveValidation.castleRights);
         setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-        setHalfMoves(grabbedPiece.type === PieceType.PAWN || moveValidation.type === MoveType.EN_PASSANT ? 0 : halfMoves+1);
+        setHalfMoves(grabbedPiece.type === PieceType.PAWN || moveValidation.capture ? 0 : halfMoves+1);
         setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
         addNotation(grabbedPiece, dropPosition, moveValidation);
         if(moveValidation.promotionPawn) {
@@ -250,8 +250,21 @@ export default function Chessboard() {
             document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         }
     };
-      
-
+    
+    function generatePGN() {
+        let PGN: string[] = [];
+        let full_moves = [];
+        for (let i = 0; i < moves.length; i += 2) {
+            const chunk = moves.slice(i, i + 2);
+            full_moves.push(chunk);
+        }
+        full_moves.forEach((moves, index) => {
+            PGN.push(index+1+'.')
+            PGN.push(moves[0]);
+            PGN.push(moves[1]);
+        });
+        return PGN.join(" ");
+    }
 
     // Render Board
     let board = [];
@@ -306,7 +319,7 @@ export default function Chessboard() {
             </Box>
             <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={350}>
                 <Box>
-                    <Paper sx={{padding: '10px'}} elevation={turnTeam === (boardFlipped ? TeamType.WHITE : TeamType.BLACK) ? 3 : 1}>
+                    <Paper sx={{padding: '10px'}} elevation={turnTeam === (boardFlipped ? TeamType.WHITE : TeamType.BLACK) ? 4 : 1}>
                         <Stack direction="row" spacing={1} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color={boardFlipped ? TeamType.WHITE : TeamType.BLACK} beatFade={turnTeam === (boardFlipped ? TeamType.WHITE : TeamType.BLACK)}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={(boardFlipped ? TeamType.WHITE : TeamType.BLACK)}/>
@@ -329,7 +342,7 @@ export default function Chessboard() {
                     </ButtonGroup>
                 </Box>
                 <Box>
-                    <Paper sx={{padding: '10px'}} elevation={turnTeam === (!boardFlipped ? TeamType.WHITE : TeamType.BLACK) ? 3 : 1}>
+                    <Paper sx={{padding: '10px'}} elevation={turnTeam === (!boardFlipped ? TeamType.WHITE : TeamType.BLACK) ? 4 : 1}>
                         <Stack direction="row" spacing={1} alignContent="center">
                             <FontAwesomeIcon icon={faCircle} fontSize="32px" color={!boardFlipped ? TeamType.WHITE : TeamType.BLACK} beatFade={turnTeam === (!boardFlipped ? TeamType.WHITE : TeamType.BLACK)}></FontAwesomeIcon>
                             <Captured pieces={captured} showTeam={(!boardFlipped ? TeamType.WHITE : TeamType.BLACK)}/>
@@ -347,8 +360,11 @@ export default function Chessboard() {
             <DialogContent>
                 <DialogContentText id="alert-dialog-description">
                     <Stack direction="row" spacing={2} alignContent="center">
-                        <TextField id="outlined-basic" label="FEN" variant="outlined" value={generateFEN()} fullWidth disabled />
+                        <TextField id="outlined-basic" label="FEN" variant="outlined" value={generateFEN()} fullWidth />
                         <Button variant="outlined" onClick={loadFEN}><FontAwesomeIcon icon={faPenToSquare} fontSize="24px"></FontAwesomeIcon></Button>
+                    </Stack>
+                    <Stack direction="row" spacing={2} alignContent="center" marginTop={2}>
+                        <TextField id="outlined-basic" label="PGN" variant="outlined" value={generatePGN()} fullWidth  multiline maxRows={4}/>
                     </Stack>
                 </DialogContentText>
             </DialogContent>
