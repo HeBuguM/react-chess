@@ -8,7 +8,7 @@ export const pawnMove = (grabPosition: Position, dropPosition: Position, team: T
     const Occupied = isOccupied(dropPosition, boardState);
     const Enemy = Occupied && isEnemy(dropPosition, boardState, team);
     // Move
-    if(grabPosition.x === dropPosition.x && ((dropPosition.y - grabPosition.y  === pawnDirection && !Occupied) || (grabPosition.y === startRank && dropPosition.y - grabPosition.y === (2*pawnDirection) && !PrewOccupied))) {
+    if(grabPosition.x === dropPosition.x && !Occupied && ((dropPosition.y - grabPosition.y  === pawnDirection) || (grabPosition.y === startRank && dropPosition.y - grabPosition.y === (2*pawnDirection) && !PrewOccupied))) {
         return true;
     }
     // Attack
