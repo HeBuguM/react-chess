@@ -57,12 +57,13 @@ export interface ArbiterDecision {
     valid: boolean;
     type?: MoveType;
     capture?: boolean;
+    check?: boolean;
+    mate?: boolean;
     capturedPiece?: string;
-    notation: string;
     newBoard: Piece[];
-    kingCheck?: KingCheckStatus;
     castleRights: CastleRights;
     enPassantTarget: Position | false;
+    notation: string;
     promotionPawn?: Piece
 }
 

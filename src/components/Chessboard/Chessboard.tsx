@@ -56,6 +56,9 @@ export default function Chessboard() {
     }
 
     function grabPiece(e: React.MouseEvent) {
+        document.getElementById("shadow-piece")?.remove();
+        document.querySelectorAll(".legal-move").forEach(e => e.remove());
+        
         let element = e.target as HTMLElement;
         const chessboard = chessboardRef.current;
         if(element.classList.contains("chess-piece") && chessboard) {
@@ -63,25 +66,38 @@ export default function Chessboard() {
                 p.position.x === Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)) 
                 && p.position.y === Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
             );
-            if(findPiece) {
-                setGrabbedPiece(findPiece)
+            if(findPiece && findPiece.team === turnTeam) {
+                setGrabbedPiece(findPiece);
+                const legalMoves = arbiter.getLegalMoves(findPiece,boardPieces,enPassantTarget,castleRights);
+                if(legalMoves.length) {
+                    legalMoves.forEach(m => {
+                        const possible_square = document.querySelector("[data-coordinates="+m+"]");
+                        const legal = document.createElement('div');
+                        legal.setAttribute("class", "legal-move");
+                        if(possible_square?.querySelector(".chess-piece")) {
+                            legal.style.cssText = `width: 100px; height: 100px; border: 4px solid green; border-radius: 50%; position: absolute; z-index: 1; opacity: 0.2;`
+                        } else {
+                            legal.style.cssText = `width: 30px; height: 30px; border-radius: 50%; position: absolute; background-color: green; z-index: 1; opacity: 0.2; margin:35px`
+                        }
+                        possible_square?.appendChild(legal);
+                    })
+                    const x = e.clientX - (SQUARE_SIZE/2);
+                    const y = e.clientY - (SQUARE_SIZE/2);
+                    element.style.zIndex = "100";
+                    element.style.position = "fixed";
+                    element.style.left = `${x}px`;
+                    element.style.top = `${y}px`;
+        
+                    document.getElementById("shadow-piece")?.remove();
+                    const shadow_piece = document.createElement('div');
+                    shadow_piece.setAttribute("id", "shadow-piece");
+                    shadow_piece.setAttribute("class", element.classList.value);
+                    shadow_piece.style.cssText = `width: 100px; height: 100px;position: absolute; background-color: green; z-index: 1; opacity: 0.3;`
+                    element.parentElement?.appendChild(shadow_piece);
+        
+                    setDraggedPiece(element);
+                }
             }
-
-            const x = e.clientX - (SQUARE_SIZE/2);
-            const y = e.clientY - (SQUARE_SIZE/2);
-            element.style.zIndex = "100";
-            element.style.position = "fixed";
-            element.style.left = `${x}px`;
-            element.style.top = `${y}px`;
-
-            document.getElementById("active-piece")?.remove();
-            const shadow_piece = document.createElement('div');
-            shadow_piece.setAttribute("id", "active-piece");
-            shadow_piece.setAttribute("class", element.classList.value);
-            shadow_piece.style.cssText = `width: 100px; height: 100px;position: absolute; background-color: green; z-index: 1; opacity: 0.3;`
-            element.parentElement?.appendChild(shadow_piece);
-
-            setDraggedPiece(element);
         }
     }
 
@@ -112,7 +128,7 @@ export default function Chessboard() {
                 const moveValidation = arbiter.validateMove(grabbedPiece, dropPosition, boardPieces, enPassantTarget, castleRights);
                 const correctTeam = turnTeam === grabbedPiece.team;
                 if(correctTeam && moveValidation.valid) {
-                    completeMove(grabbedPiece, dropPosition,moveValidation);
+                    completeMove(grabbedPiece, dropPosition, moveValidation);
                 } else {
                     resetDraggedPiece();
                     resetGrabbedPiece();
@@ -124,6 +140,15 @@ export default function Chessboard() {
     }
 
     function completeMove(grabbedPiece: Piece, dropPosition: Position, moveValidation: ArbiterDecision) {
+        const enemyTeam = grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE;
+        
+        // Mate 
+        let enemyKing = moveValidation.newBoard.find(p => p.type === PieceType.KING && p.team === enemyTeam);
+
+        if(enemyKing && moveValidation.check && !arbiter.getLegalMoves(enemyKing,moveValidation.newBoard,enPassantTarget,castleRights).length) {
+            moveValidation.notation = moveValidation.notation.replace('+','#');
+        }
+        
         setBoardPieces(moveValidation.newBoard);
         setEnPassantTarget(moveValidation.enPassantTarget);
         setCastleRights(moveValidation.castleRights);
@@ -150,7 +175,8 @@ export default function Chessboard() {
     }
     function resetGrabbedPiece() {
         if(grabbedPiece) {
-            document.getElementById("active-piece")?.remove();
+            document.getElementById("shadow-piece")?.remove();
+            document.querySelectorAll(".legal-move").forEach(e => e.remove());
             setGrabbedPiece(null);
         }
     }
@@ -284,24 +310,13 @@ export default function Chessboard() {
 
     // Render Board
     let board = [];
-    if(boardFlipped === false) {
-        for(let j = HORIZONTAL_AXIS.length - 1; j >= 0; j--) {
-            for(let i = 0; i < VERTICAL_AXIS.length; i++) {
-                const square = i + j + 2;
-                const piece = boardPieces.find(p => samePosition(p.position, {x: i, y: j}))
-                let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
-                board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
-            }
-        }
-    } else {
-        // Flipped
-        for(let j = 0; j < 8; j++) {
-            for(let i = VERTICAL_AXIS.length - 1; i >= 0; i--) {
-                const square = i + j + 2;
-                const piece = boardPieces.find(p => samePosition(p.position, {x: i, y: j}))
-                let coordinates = HORIZONTAL_AXIS[i]+VERTICAL_AXIS[j];
-                board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
-            }
+    for(let j = HORIZONTAL_AXIS.length - 1; j >= 0; j--) {
+        for(let i = 0; i < VERTICAL_AXIS.length; i++) {
+            const square = i + j + 2;
+            const position = {x: Math.abs((boardFlipped ? 7 : 0) - i), y:  Math.abs((boardFlipped ? 7 : 0) - j)};
+            const piece = boardPieces.find(p => samePosition(p.position, position))
+            let coordinates = translatePosition(position);
+            board.push(<Square key={`${i},${j}`} coordinates={coordinates} number={square} piece_type={piece?.type} team={piece?.team} />)
         }
     }
 

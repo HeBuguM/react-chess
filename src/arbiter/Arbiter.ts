@@ -67,6 +67,7 @@ export default class Arbiter {
         const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
         const pawnDirection = grabbedPiece.team === TeamType.WHITE ? 1 : -1;
         const castleSide = grabbedPiece.position.x-dropPosition.x < 0 ? 'king' : 'queen';
+        const enemyTeam = grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE;
 
         if(grabbedPiece.type === PieceType.PAWN && this.isEnPassantMove(grabbedPiece, dropPosition, enPassantTarget)) {
             move.type = MoveType.EN_PASSANT;
@@ -139,11 +140,31 @@ export default class Arbiter {
             }, [] as Piece[]);
         }
 
-        move.kingCheck = this.kingCheckStatus(move.newBoard);
-        move.valid = move.kingCheck[grabbedPiece.team] ? false : move.valid;
+        // Check
+        let checkStatus = this.kingCheckStatus(move.newBoard);
+        move.valid = checkStatus[grabbedPiece.team] ? false : move.valid;
+        move.check = checkStatus[enemyTeam];
+        // Notation
         move.notation = this.generateNotation(grabbedPiece,dropPosition,boardState,enPassantTarget,move);
-        console.log(move);
         return move;
+    }
+
+    getLegalMoves(checkPiece: Piece, boardState: Piece[], enPassantTarget: Position | false ,castleRights: CastleRights) {
+        const legalMoves = [];
+        if(checkPiece) {
+            for(let j = 7; j >= 0; j--) {
+                for(let i = 0; i <= 7; i++) {
+                    const checkPosition: Position = {x: i, y: j}
+                    if(!samePosition(checkPiece.position,checkPosition)) {
+                        const moveValidation = this.validateMove(checkPiece, checkPosition, boardState, enPassantTarget, castleRights);
+                        if(moveValidation.valid) {
+                            legalMoves.push(translatePosition(checkPosition));
+                        }
+                    }
+                }
+            }
+        }
+        return legalMoves;
     }
 
     kingCheckStatus(boardPieces: Piece[]) {
@@ -178,7 +199,7 @@ export default class Arbiter {
 
     generateNotation(grabbedPiece: Piece, dropPosition: Position, boardPieces: Piece[], enPassantTarget: Position | false, move: ArbiterDecision) {
         let coordinates = translatePosition(dropPosition);
-        let check_sign = move.kingCheck && move.kingCheck[grabbedPiece.team === TeamType.WHITE ? "black" : "white"] ? "+":"";
+        let check_sign = move.check ? "+" : "";
         let capture = move.capture ? "x" : "";
         let piece = "";
 
