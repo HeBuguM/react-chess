@@ -13,12 +13,12 @@ import Captured from "../Captured/Captured";
 export default function Chessboard() {
     const arbiter = new Arbiter();
     const [boardFlipped, setBoardFlipped] = useState<boolean>(false);
-    const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
+    const [draggedPiece, setDraggedPiece] = useState<HTMLElement | null>(null);
     const [promotionPawn, setPromotionPawn] = useState<Piece>();
     const [turnTeam, setTurnTeam] = useState<TeamType>(TeamType.WHITE);
     const [halfMoves, setHalfMoves] = useState<number>(0);
     const [fullMoves, setFullMoves] = useState<number>(1);
-    const [grabPosition, setGrabPosition] = useState<Position>({ x: -1, y: -1 });
+    const [grabbedPiece, setGrabbedPiece] = useState<Piece | null>(null);
     const [boardPieces, setBoardPieces] = useState<Piece[]>(initialBoardPieces);
     const [moves, setMoves] = useState<Array<string>>([]);
     const [captured, setCaptured] = useState<CapturedPieces>({white: [],black: []});
@@ -47,9 +47,9 @@ export default function Chessboard() {
     }
 
     function cancelGrabPiece() {
-        if(activePiece) {
-            resetActivePiece(activePiece)
-            setActivePiece(null);
+        if(draggedPiece || grabbedPiece) {
+            resetDraggedPiece();
+            resetGrabbedPiece();
             return true;
         }
         return false;
@@ -59,10 +59,14 @@ export default function Chessboard() {
         let element = e.target as HTMLElement;
         const chessboard = chessboardRef.current;
         if(element.classList.contains("chess-piece") && chessboard) {
-            setGrabPosition({
-                x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
-                y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))}
+            const findPiece = boardPieces.find(p => 
+                p.position.x === Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)) 
+                && p.position.y === Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
             );
+            if(findPiece) {
+                setGrabbedPiece(findPiece)
+            }
+
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
             element.style.zIndex = "100";
@@ -70,50 +74,52 @@ export default function Chessboard() {
             element.style.left = `${x}px`;
             element.style.top = `${y}px`;
 
-            // document.getElementById("active-piece")?.remove();
-            // const active_sq = document.createElement('div');
-            // active_sq.setAttribute("id", "active-piece");
-            // active_sq.style.cssText = `width: 100px; height: 100px;position: absolute; background-color: #a3ff003d; z-index: 1;`
-            // element.parentElement?.appendChild(active_sq);
+            document.getElementById("active-piece")?.remove();
+            const shadow_piece = document.createElement('div');
+            shadow_piece.setAttribute("id", "active-piece");
+            shadow_piece.setAttribute("class", element.classList.value);
+            shadow_piece.style.cssText = `width: 100px; height: 100px;position: absolute; background-color: green; z-index: 1; opacity: 0.3;`
+            element.parentElement?.appendChild(shadow_piece);
 
-            setActivePiece(element);
+            setDraggedPiece(element);
         }
     }
 
     function movePiece(e: React.MouseEvent) {
         const chessboard = chessboardRef.current;
-        if(activePiece && chessboard) {
+        if(draggedPiece && chessboard) {
             const minX = chessboard.offsetLeft - (SQUARE_SIZE/2);
             const minY = chessboard.offsetTop - (SQUARE_SIZE/2);
             const maxX = chessboard.offsetLeft + chessboard.clientWidth - (SQUARE_SIZE/2);
             const maxY = chessboard.offsetTop + chessboard.clientHeight - (SQUARE_SIZE/2);
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
-            activePiece.style.position = "fixed";
-            activePiece.style.left = x < minX ? `${minX}px` : (x > maxX ? `${maxX}px` : `${x}px`)
-            activePiece.style.top = y < minY ? `${minY}px` : (y > maxY ? `${maxY}px` : `${y}px`)
+            draggedPiece.style.position = "fixed";
+            draggedPiece.style.left = x < minX ? `${minX}px` : (x > maxX ? `${maxX}px` : `${x}px`)
+            draggedPiece.style.top = y < minY ? `${minY}px` : (y > maxY ? `${maxY}px` : `${y}px`)
         }
     } 
 
     function dropPiece(e: React.MouseEvent) {
         const chessboard = chessboardRef.current;
-        if(activePiece && chessboard) {
-            const grabbedPiece = boardPieces.find(p => p.position.x === grabPosition.x && p.position.y === grabPosition.y);
+        if(grabbedPiece && chessboard) {
             const dropPosition: Position = {
                 x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
                 y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
             }
             
-            if(grabbedPiece) {
+            if(!samePosition(grabbedPiece.position,dropPosition)) {
                 const moveValidation = arbiter.validateMove(grabbedPiece, dropPosition, boardPieces, enPassantTarget, castleRights);
                 const correctTeam = turnTeam === grabbedPiece.team;
                 if(correctTeam && moveValidation.valid) {
                     completeMove(grabbedPiece, dropPosition,moveValidation);
                 } else {
-                    resetActivePiece(activePiece);
+                    resetDraggedPiece();
+                    resetGrabbedPiece();
                 }
+            } else {
+                resetDraggedPiece();
             }
-            setActivePiece(null);
         }
     }
 
@@ -130,17 +136,27 @@ export default function Chessboard() {
             setPromotionPawn(moveValidation.promotionPawn);
         }
         moveValidation.capture ? captureSound.play() : moveSound.play();
+        resetGrabbedPiece();
     }
 
-    function resetActivePiece(activePiece:HTMLElement) {
-        activePiece.style.removeProperty("z-index");
-        activePiece.style.removeProperty("position");
-        activePiece.style.removeProperty("top");
-        activePiece.style.removeProperty("left");
+    function resetDraggedPiece() {
+        if(draggedPiece) {
+            draggedPiece.style.removeProperty("z-index");
+            draggedPiece.style.removeProperty("position");
+            draggedPiece.style.removeProperty("top");
+            draggedPiece.style.removeProperty("left");
+            setDraggedPiece(null);
+        }
+    }
+    function resetGrabbedPiece() {
+        if(grabbedPiece) {
+            document.getElementById("active-piece")?.remove();
+            setGrabbedPiece(null);
+        }
     }
 
     function addNotation(grabbedPiece: Piece, dropPosition: Position, moveValidation: ArbiterDecision) {
-        let old_coordinates = translatePosition(grabPosition);
+        let old_coordinates = translatePosition(grabbedPiece.position);
         let new_coordinates = translatePosition(dropPosition);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
