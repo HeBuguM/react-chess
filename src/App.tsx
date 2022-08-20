@@ -26,7 +26,7 @@ const App = () => {
           <Container maxWidth="xl">
               <Routes>
                 <Route path="/" element={<Chessboard />} />
-                <Route path="learn" element={<Learn />} />
+                <Route path="/learn" element={<Learn />} />
               </Routes>
           </Container>
     </ThemeProvider>

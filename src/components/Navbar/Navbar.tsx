@@ -19,11 +19,11 @@ import { Link } from '@mui/material';
 const pages: any = [
   {
     name: 'Play',
-    path: '/#/'
+    path: '/react-chess/#/'
   }, 
   {
     name: 'Learn',
-    path: '/#/learn'
+    path: '/react-chess/#/learn'
   }
 ]
 const settings = ['Change Name'];
