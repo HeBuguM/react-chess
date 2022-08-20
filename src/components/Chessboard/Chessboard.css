@@ -48,6 +48,7 @@
     height: 100px;
     padding-left: 3px;
 }
+
 #pawn-promotion-modal {
     display: none;
     position: absolute;
