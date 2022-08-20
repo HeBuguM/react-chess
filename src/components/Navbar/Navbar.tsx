@@ -14,8 +14,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faUser } from '@fortawesome/free-solid-svg-icons';
 
 import { useState, MouseEvent } from "react";
+import { Link } from '@mui/material';
 
-const pages = ['Home'];
+const pages: any = [
+  {
+    name: 'Play',
+    path: '/'
+  }, 
+  {
+    name: 'Learn',
+    path: '/learn'
+  }
+]
 const settings = ['Change Name'];
 
 const Navbar = () => {
@@ -70,21 +80,21 @@ const Navbar = () => {
                 display: { xs: 'block', md: 'none' },
               }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
-                </MenuItem>
+              {pages.map((page: any) => (
+                <Link href={page.path} color="white" underline='none'>
+                  <MenuItem key={page.name}>{page.name}</MenuItem>
+                </Link>
               ))}
             </Menu>
           </Box>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
+            {pages.map((page: any) => (
               <Button
-                key={page}
-                onClick={handleCloseNavMenu}
-                sx={{ my: 2, color: 'white', display: 'block' }}
+                key={page.name}
+                sx={{ my: 2, color: 'white', display: 'block', textAlign: "center" }}
+                href={page.path}
               >
-                {page}
+                {page.name}
               </Button>
             ))}
           </Box>

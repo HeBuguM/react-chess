@@ -4,6 +4,8 @@ import Chessboard from './components/Chessboard/Chessboard';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Navbar from './components/Navbar/Navbar';
+import { BrowserRouter } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 const darkTheme = createTheme({
   palette: {
@@ -21,9 +23,14 @@ const App = () => {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
         <Navbar />
-        <Container maxWidth="xl">
-        <Chessboard />
-      </Container>
+          <Container maxWidth="xl">
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Chessboard />} />
+                <Route path="learn" element={<Chessboard />} />
+              </Routes>
+              </BrowserRouter>
+          </Container>
     </ThemeProvider>
   )
 }
