@@ -2,7 +2,8 @@
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    height: 350px;
+    min-height: 250px;
+    max-height: 350px;
     align-content: flex-start;
     color: #bcbcbb;
     overflow: auto;
