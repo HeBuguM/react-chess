@@ -19,11 +19,11 @@ import { Link } from '@mui/material';
 const pages: any = [
   {
     name: 'Play',
-    path: '/'
+    path: '/#/'
   }, 
   {
     name: 'Learn',
-    path: '/learn'
+    path: '/#/learn'
   }
 ]
 const settings = ['Change Name'];
@@ -81,8 +81,8 @@ const Navbar = () => {
               }}
             >
               {pages.map((page: any) => (
-                <Link href={page.path} color="white" underline='none'>
-                  <MenuItem key={page.name}>{page.name}</MenuItem>
+                <Link key={page.name} href={page.path} color="white" underline='none'>
+                  <MenuItem>{page.name}</MenuItem>
                 </Link>
               ))}
             </Menu>

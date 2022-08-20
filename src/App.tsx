@@ -1,11 +1,11 @@
-import { Container } from '@mui/system';
-import Chessboard from './components/Chessboard/Chessboard';
 
+import { Route, Routes } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Container } from '@mui/system';
 import Navbar from './components/Navbar/Navbar';
-import { BrowserRouter } from 'react-router-dom';
-import { Route, Routes } from 'react-router-dom';
+import Chessboard from './components/Chessboard/Chessboard';
+import Learn from './components/Learn/Learn';
 
 const darkTheme = createTheme({
   palette: {
@@ -24,12 +24,10 @@ const App = () => {
       <CssBaseline />
         <Navbar />
           <Container maxWidth="xl">
-            <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Chessboard />} />
-                <Route path="learn" element={<Chessboard />} />
+                <Route path="learn" element={<Learn />} />
               </Routes>
-              </BrowserRouter>
           </Container>
     </ThemeProvider>
   )
