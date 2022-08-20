@@ -83,6 +83,15 @@ export enum PieceType {
     KING='king'
 }
 
+export const PieceValue = {
+    king: 0,
+    pawn: 1,
+    knight: 3,
+    bishop: 3,
+    rook: 5,
+    queen: 9
+}
+
 export enum TeamType {
     BLACK='black',
     WHITE='white'
@@ -92,6 +101,11 @@ export enum MoveType {
     REGULAR='regular',
     EN_PASSANT='enPassant',
     CASTLE='castle'
+}
+
+export interface MoveHistory {
+    notation: string;
+    FEN: string;
 }
 
 // Init Board Pieces
