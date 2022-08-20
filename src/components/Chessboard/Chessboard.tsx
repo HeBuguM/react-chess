@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import Notation from "../Notation/Notation";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore} from "../../Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, PieceValue, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore, MoveHistory} from "../../Constants";
 import { Box, Button, ButtonGroup, Dialog, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -26,7 +26,7 @@ export default function Chessboard() {
     );
     const [grabbedPiece, setGrabbedPiece] = useState<Piece | null>(null);
     const [boardPieces, setBoardPieces] = useState<Piece[]>(initialBoardPieces);
-    const [moves, setMoves] = useState<Array<string>>([]);
+    const [moveHistory, setMoveHistory] = useState<MoveHistory[]>([]);
     const [captured, setCaptured] = useState<CapturedPieces>({white: [],black: []});
     const [enPassantTarget, setEnPassantTarget] = useState<Position | false>(false);
     const [castleRights, setCastleRights] = useState<CastleRights>({
@@ -81,9 +81,9 @@ export default function Chessboard() {
                         const legal = document.createElement('div');
                         legal.setAttribute("class", "legal-move");
                         if(possible_square?.querySelector(".chess-piece")) {
-                            legal.style.cssText = `width: 100px; height: 100px; border: 4px solid green; border-radius: 50%; position: absolute; z-index: 1; opacity: 0.2;`
+                            legal.style.cssText = `width: 100px; height: 100px; border: 4px solid orange; border-radius: 50%; position: absolute; z-index: 1; opacity: 0.4;`
                         } else {
-                            legal.style.cssText = `width: 30px; height: 30px; border-radius: 50%; position: absolute; background-color: green; z-index: 1; opacity: 0.2; margin:35px`
+                            legal.style.cssText = `width: 30px; height: 30px; border-radius: 50%; position: absolute; background-color: orange; z-index: 1; opacity: 0.4; margin:35px`
                         }
                         possible_square?.appendChild(legal);
                     })
@@ -147,10 +147,59 @@ export default function Chessboard() {
 
     function completeMove(grabbedPiece: Piece, dropPosition: Position, moveValidation: ArbiterDecision) {
         let sound = moveValidation.capture ? captureSound : moveSound;
+        let newHalfMoves = grabbedPiece.type === PieceType.PAWN || moveValidation.capture ? 0 : halfMoves+1;
+        let newFullMoves = fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0);
+        let newTeamTurn = grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE;
+        let enemyTeam = grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE;
         
-        let enemyKing = moveValidation.newBoard.find(p => p.type === PieceType.KING && p.team === (grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE));
-        let enemyKingLegalMoves = enemyKing && arbiter.getLegalMoves(enemyKing,moveValidation.newBoard,enPassantTarget,castleRights).length;
-        if(!enemyKingLegalMoves) {
+        setBoardPieces(moveValidation.newBoard);
+        setEnPassantTarget(moveValidation.enPassantTarget);
+        setCastleRights(moveValidation.castleRights);
+        setTurnTeam(newTeamTurn);
+        setHalfMoves(newHalfMoves);
+        setFullMoves(newFullMoves);
+        addNotation(grabbedPiece, dropPosition, moveValidation,newTeamTurn,newHalfMoves,newFullMoves);
+        if(moveValidation.promotionPawn) {
+            modalRef.current?.classList.add("active");
+            setPromotionPawn(moveValidation.promotionPawn);
+        }
+        resetGrabbedPiece();
+
+        // Material Check
+        let legalMoves = 0;
+        let materialScore1 = 0;
+        let materialScore2 = 0;
+        let hasPawn = false;
+        moveValidation.newBoard.forEach(piece => {
+            if(piece.team === enemyTeam) {
+                legalMoves = legalMoves + arbiter.getLegalMoves(piece,moveValidation.newBoard,moveValidation.enPassantTarget,moveValidation.castleRights).length
+                materialScore1 = materialScore1 + PieceValue[piece.type];
+                if(piece.type === PieceType.PAWN) {
+                    hasPawn = true;
+                }
+            } else {
+                materialScore2 = materialScore2 + PieceValue[piece.type];
+            }
+        });
+
+        // Repetition Check
+        let FENs:string[] = [];
+        moveHistory.forEach(move => {
+            FENs.push(move.FEN.split(" ")[0]);
+        })
+        const FENcount:any = FENs.reduce((accumulator: any, value) => {
+            return {...accumulator, [value]: (accumulator[value] || 0) + 1};
+          }, {});
+        const repetitions: number = Math.max.apply(null, Object.values(FENcount));
+       
+        if(repetitions === 3) {
+            sound = genericSound;
+            setScore({
+                white: 0.5,
+                black: 0.5,
+                type: "Threefold repetition"
+            })
+        } else if(!legalMoves) {
             if(moveValidation.check) {
                 sound = genericSound;
                 moveValidation.notation = moveValidation.notation.replace('+','#');
@@ -159,30 +208,29 @@ export default function Chessboard() {
                     black: grabbedPiece.team === TeamType.BLACK ? 1 : 0,
                     type: "Checkmate"
                 })
-                console.log("Mate");
             } else {
-                // TODO: check all enemy legal moves;
-                // sound = genericSound;
-                // setScore({
-                //     white: 0.5,
-                //     black: 0.5,
-                //     type: "Stalemate"
-                // })
+                sound = genericSound;
+                setScore({
+                    white: 0.5,
+                    black: 0.5,
+                    type: "Stalemate"
+                })
             }
+        } else if(!hasPawn && materialScore1 <= 3 && materialScore2 <= 3) {
+            sound = genericSound;
+            setScore({
+                white: 0.5,
+                black: 0.5,
+                type: "Insufficient Material"
+            })
+        } else if (newHalfMoves === 100) {
+            sound = genericSound;
+            setScore({
+                white: 0.5,
+                black: 0.5,
+                type: "50-move Rule"
+            })
         }
-        
-        setBoardPieces(moveValidation.newBoard);
-        setEnPassantTarget(moveValidation.enPassantTarget);
-        setCastleRights(moveValidation.castleRights);
-        setTurnTeam(grabbedPiece.team === TeamType.WHITE ? TeamType.BLACK : TeamType.WHITE);
-        setHalfMoves(grabbedPiece.type === PieceType.PAWN || moveValidation.capture ? 0 : halfMoves+1);
-        setFullMoves(fullMoves+(grabbedPiece.team === TeamType.BLACK ? 1 : 0));
-        addNotation(grabbedPiece, dropPosition, moveValidation);
-        if(moveValidation.promotionPawn) {
-            modalRef.current?.classList.add("active");
-            setPromotionPawn(moveValidation.promotionPawn);
-        }
-        resetGrabbedPiece();
         sound.play();
     }
 
@@ -203,13 +251,16 @@ export default function Chessboard() {
         }
     }
 
-    function addNotation(grabbedPiece: Piece, dropPosition: Position, moveValidation: ArbiterDecision) {
+    function addNotation(grabbedPiece: Piece, dropPosition: Position, moveValidation: ArbiterDecision, newturnTeam?: TeamType, newHalfMoves?: number, newFullMoves?: number) {
         let old_coordinates = translatePosition(grabbedPiece.position);
         let new_coordinates = translatePosition(dropPosition);
         document.querySelectorAll(`.square.new`).forEach(el => el.classList.remove("new"));
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
-        moves.push(moveValidation.notation);
-        setMoves(moves);
+        moveHistory.push({
+            notation: moveValidation.notation,
+            FEN: generateFEN(moveValidation.newBoard,newturnTeam,moveValidation.castleRights,moveValidation.enPassantTarget,newHalfMoves)
+        });
+        setMoveHistory(moveHistory);
         if(moveValidation.capture && moveValidation.capturedPiece) {
             captured[grabbedPiece.team].push(moveValidation.capturedPiece);
             setCaptured(captured);
@@ -233,7 +284,14 @@ export default function Chessboard() {
         modalRef.current?.classList.remove("active");
     }
 
-    function generateFEN() {
+    function generateFEN(newBoard?: Piece[], newturnTeam?: TeamType, newCastleRights?: CastleRights, newEnPassantTarget?: Position | false, newHalfMoves?: number, newFullMoves?: number) {
+        let board = newBoard ? newBoard : boardPieces;
+        let turn = newturnTeam ? newturnTeam : turnTeam;
+        let castle_rights = newCastleRights ? newCastleRights : castleRights;
+        let en_passant_target = newEnPassantTarget ? newEnPassantTarget : enPassantTarget;
+        let half_moves = newHalfMoves ? newHalfMoves : halfMoves;
+        let full_moves = newFullMoves ? newFullMoves : fullMoves;
+
         let FEN = [];
 
         let ranks = [];
@@ -244,7 +302,7 @@ export default function Chessboard() {
 
             for(let x = 0; x < 8; x++) {
 
-                const piece = boardPieces.find(p => samePosition(p.position, {x: x, y: y}))
+                const piece = board.find(p => samePosition(p.position, {x: x, y: y}))
                 if(piece) {
                     if(no_piece > 0) {
                         row.push(no_piece);
@@ -265,16 +323,16 @@ export default function Chessboard() {
         // Pieces
         FEN.push(ranks.join("/")); 
         // Turn
-        FEN.push(turnTeam.substring(0,1).toLocaleLowerCase()); 
+        FEN.push(turn.substring(0,1).toLocaleLowerCase()); 
         // Castle
-        let castling = (castleRights.white.king ? "K" : "") + (castleRights.white.queen ? "Q" : "") + (castleRights.black.king ? "k" : "") + (castleRights.black.queen ? "q" : "");
+        let castling = (castle_rights.white.king ? "K" : "") + (castle_rights.white.queen ? "Q" : "") + (castle_rights.black.king ? "k" : "") + (castle_rights.black.queen ? "q" : "");
         FEN.push(castling ? castling : "-"); 
         // En Passant
-        FEN.push(enPassantTarget ? translatePosition(enPassantTarget) : "-"); 
+        FEN.push(en_passant_target ? translatePosition(en_passant_target) : "-"); 
         // Halfmoves
-        FEN.push(halfMoves); 
+        FEN.push(half_moves); 
         // Fullmoves
-        FEN.push(fullMoves); 
+        FEN.push(full_moves); 
         
         return FEN.join(" ");
     }
@@ -319,14 +377,16 @@ export default function Chessboard() {
     function generatePGN() {
         let PGN: string[] = [];
         let full_moves = [];
-        for (let i = 0; i < moves.length; i += 2) {
-            const chunk = moves.slice(i, i + 2);
+        for (let i = 0; i < moveHistory.length; i += 2) {
+            const chunk = moveHistory.slice(i, i + 2);
             full_moves.push(chunk);
         }
         full_moves.forEach((moves, index) => {
             PGN.push(index+1+'.')
-            PGN.push(moves[0]);
-            PGN.push(moves[1]);
+            PGN.push(moves[0].notation);
+            if(moves[1]) {
+                PGN.push(moves[1].notation);
+            }
         });
         return PGN.join(" ");
     }
@@ -381,7 +441,7 @@ export default function Chessboard() {
                     </Paper>
                 </Box>
                 <Box>
-                    <Notation moves={moves} score={score}/>
+                    <Notation moves={moveHistory} score={score}/>
                     <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
                         <Button variant="contained" onClick={() => setBoardFlipped(!boardFlipped)}><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
