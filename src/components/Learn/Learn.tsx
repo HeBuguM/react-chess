@@ -14,26 +14,27 @@ export default function Learn() {
     const [boardFlipped, setBoardFlipped] = useState<boolean>(false);
     const [showPieces, setShowPieces] = useState<boolean>(true);
     const [showCoordinates, setShowCoordinates] = useState<boolean>(true);
-    const [previewNext, setPreviewNext] = useState<boolean>(true);
+    const [preview, setPreview] = useState<boolean>(true);
+    const [retry, setRetry] = useState<boolean>(true);
 
     const [score, setScore] = useState<number>(0);
     const [mistakes, setMistakes] = useState<number>(0);
-    const [current, setCurrent] = useState<string>("");
-    const [next, setNext] = useState<string>("");
+    const [current, setCurrent] = useState<Position | null>(null);
+    const [next, setNext] = useState<Position | null>(null);
     
     const [startLearning, setStartLearning] = useState<boolean>(false);
     
     const generateCoordinate = () => {
-        return translatePosition({
-            x: Math.floor(Math.random() * (7 - 1 + 1)) + 1,
-            y: Math.floor(Math.random() * (7 - 1 + 1)) + 1
-        });
+        return {
+            x: Math.floor(Math.random() * 7),
+            y: Math.floor(Math.random() * 7)
+        };
     }
 
-    const initCoordinates = () => {
-        let newCurrent = generateCoordinate();
+    const generateTargets = (current?: Position | null) => {
+        let newCurrent = current ? current : generateCoordinate();
         let newNext = generateCoordinate();
-        while(newNext === newCurrent) {
+        while(newNext.x === newCurrent.x || newNext.y === newCurrent.y) {
             newNext = generateCoordinate();
         }
         setCurrent(newCurrent);
@@ -48,7 +49,7 @@ export default function Learn() {
                 y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
             }
             const score_card = document.getElementById("score-card");
-            if(translatePosition(selectedCoordinates) === current) {
+            if(current&& selectedCoordinates.x === current.x && selectedCoordinates.y === current.y) {
                 if(score_card) {
                     score_card.style.backgroundColor = "green";
                     setTimeout(function () {
@@ -56,14 +57,12 @@ export default function Learn() {
                     }, 200);
                 }
                 setScore(score+1);
-                setCurrent(next);
-                let newNext = generateCoordinate();
-                while(newNext === next) {
-                    newNext = generateCoordinate();
-                }
-                setNext(newNext);
+                generateTargets(next);
             } else {
                 setMistakes(mistakes+1);
+                if(!retry) {
+                    generateTargets(next);
+                }
                 if(score_card) {
                     score_card.style.backgroundColor = "#d32f2f";
                     setTimeout(function () {
@@ -75,7 +74,7 @@ export default function Learn() {
     }
 
     const startHandler = () => {
-        initCoordinates();
+        generateTargets();
         setStartLearning(true);
         setScore(0);
         setMistakes(0);
@@ -120,8 +119,8 @@ export default function Learn() {
                     {showCoordinates && <div className="verticalLabels" style={{flexDirection: boardFlipped ? "column" : "column-reverse"}}>{verticalLabels}</div>}
                     {startLearning &&
                     <div id="learningTargets">
-                        <div className="current">{current}</div>
-                        {previewNext && <div className="next">{next}</div>}
+                        {current && <div className="current">{translatePosition(current)}</div>}
+                        {next && preview && <div className="next">{translatePosition(next)}</div>}
                     </div>}
                 </div>
             </Box>
@@ -151,8 +150,13 @@ export default function Learn() {
                         />
                         <FormLabel component="legend" sx={{marginTop: 5}}>Target Coordinates</FormLabel>
                         <FormControlLabel
-                            control={<Switch color="success" checked={previewNext} onChange={e => setPreviewNext(!previewNext)} />}
-                            label="Preview next"
+                            control={<Switch color="success" checked={preview} onChange={e => setPreview(!preview)} />}
+                            label="Preview"
+                            labelPlacement="end"
+                        />
+                        <FormControlLabel
+                            control={<Switch color="success" checked={retry} onChange={e => setRetry(!retry)} />}
+                            label="Retry"
                             labelPlacement="end"
                         />
                     </Paper>                     
