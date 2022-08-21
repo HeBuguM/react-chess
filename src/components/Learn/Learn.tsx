@@ -1,12 +1,12 @@
 import "../Chessboard/Chessboard.css";
 import "./Learn.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Square from "../Squere/Square";
 import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, initialBoardPieces , Position, translatePosition } from "../../Constants";
 import { Box, Button, FormControlLabel, FormLabel, Paper, Switch } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGraduationCap } from "@fortawesome/free-solid-svg-icons";
+import { faGraduationCap, faHourglass, faInfinity } from "@fortawesome/free-solid-svg-icons";
 
 export default function Learn() {
     const chessboardRef = useRef<HTMLDivElement>(null);
@@ -16,13 +16,32 @@ export default function Learn() {
     const [showCoordinates, setShowCoordinates] = useState<boolean>(true);
     const [preview, setPreview] = useState<boolean>(true);
     const [retry, setRetry] = useState<boolean>(true);
-
-    const [score, setScore] = useState<number>(0);
+    
+    const [score, setScore] = useState<number>(-1);
     const [mistakes, setMistakes] = useState<number>(0);
     const [current, setCurrent] = useState<Position | null>(null);
     const [next, setNext] = useState<Position | null>(null);
     
+    const [timeControl, setTimeControl] = useState<boolean>(true);
+    const [timer, setTimer] = useState<number>(0)
     const [startLearning, setStartLearning] = useState<boolean>(false);
+
+    useEffect(()=>{
+        let myInterval = setInterval(() => {
+            console.log(timer);
+            if (timer > 0) {
+                setTimer(timer - 1);
+            }
+            if (timer === 0) {
+                setStartLearning(false);
+                clearInterval(myInterval)
+            } 
+        }, 1000)
+        return ()=> {
+            clearInterval(myInterval);
+        };
+    },[timer]);
+    
     
     const generateCoordinate = () => {
         return {
@@ -43,13 +62,13 @@ export default function Learn() {
 
     function selectCoordinates(e: React.MouseEvent) {        
         const chessboard = chessboardRef.current;
-        if(chessboard) {
+        if(startLearning && chessboard) {
             const selectedCoordinates: Position = {
                 x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
                 y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
             }
             const score_card = document.getElementById("score-card");
-            if(current&& selectedCoordinates.x === current.x && selectedCoordinates.y === current.y) {
+            if(current && selectedCoordinates.x === current.x && selectedCoordinates.y === current.y) {
                 if(score_card) {
                     score_card.style.backgroundColor = "green";
                     setTimeout(function () {
@@ -78,10 +97,14 @@ export default function Learn() {
         setStartLearning(true);
         setScore(0);
         setMistakes(0);
+        if(timeControl) {
+            setTimer(30);
+        }
     }
 
     const stopHandler = () => {
         setStartLearning(false);
+        setTimer(0);
     }
     
     // Render Board
@@ -130,6 +153,7 @@ export default function Learn() {
                         <FontAwesomeIcon icon={faGraduationCap} fontSize="24px"></FontAwesomeIcon> Learn Coordinates
                     </Paper>
                 </Box>
+                {!startLearning && 
                 <Box sx={{marginTop: 2}}>
                     <Paper sx={{padding: '10px', textAlign: "center", fontSize: "24px"}} elevation={2}>
                         <FormLabel component="legend">Side</FormLabel>
@@ -137,7 +161,12 @@ export default function Learn() {
                             <img alt="White" src="assets/images/king_w.png" style={{cursor:"pointer", opacity: !boardFlipped ? "1" : "0.3"}} height={"80px"} onClick={() => setBoardFlipped(false)}/>
                             <img alt="Black" src="assets/images/king_b.png" style={{cursor:"pointer", opacity: boardFlipped ? "1" : "0.3"}} height={"80px"} onClick={() => setBoardFlipped(true)} />
                         </Stack>
-                        <FormLabel component="legend" sx={{marginTop: 5}}>Board</FormLabel>
+                        <FormLabel component="legend" sx={{marginTop: 2}}>Mode</FormLabel>
+                        <Stack display={"flex"} direction="row" spacing={1} alignItems="center" justifyContent="space-evenly">
+                            <FontAwesomeIcon icon={faHourglass} style={{cursor:"pointer", opacity: timeControl ? "1" : "0.3"}} fontSize="40px" onClick={() => setTimeControl(true)}></FontAwesomeIcon>
+                            <FontAwesomeIcon icon={faInfinity} style={{cursor:"pointer", opacity: !timeControl ? "1" : "0.3"}} fontSize="50px" onClick={() => setTimeControl(false)}></FontAwesomeIcon>
+                        </Stack>
+                        <FormLabel component="legend" sx={{marginTop: 3}}>Board</FormLabel>
                         <FormControlLabel
                             label="Pieces"
                             control={<Switch color="success" checked={showPieces} onChange={e => setShowPieces(!showPieces)} />}
@@ -148,8 +177,8 @@ export default function Learn() {
                             label="Coordinates"
                             labelPlacement="end"
                         />
-                        <FormLabel component="legend" sx={{marginTop: 5}}>Target Coordinates</FormLabel>
-                        <FormControlLabel
+                        <FormLabel component="legend" sx={{marginTop: 3}}>Target Coordinates</FormLabel>
+                            <FormControlLabel
                             control={<Switch color="success" checked={preview} onChange={e => setPreview(!preview)} />}
                             label="Preview"
                             labelPlacement="end"
@@ -160,8 +189,15 @@ export default function Learn() {
                             labelPlacement="end"
                         />
                     </Paper>                     
-                </Box>
-                {startLearning && <Box sx={{marginTop: 2}}>
+                </Box>}
+                {startLearning &&
+                <Box sx={{marginTop: 2}}>
+                    <Paper sx={{padding: '15px', textAlign: "center"}} elevation={2}>
+                        <img alt="White" src={`assets/images/king_${!boardFlipped ? "w" : "b"}.png`} height={"80px"}/>
+                    </Paper>                     
+                </Box>}
+                {score >=0 &&
+                <Box sx={{marginTop: 2}}>
                     <Paper sx={{padding: '15px', textAlign: "center"}} elevation={2} id="score-card">
                         <Stack display={"flex"} direction="row" spacing={1} alignItems="center" justifyContent="space-evenly">
                             <FormLabel component="legend" sx={{fontSize: "24px"}}>Score</FormLabel>
@@ -169,6 +205,13 @@ export default function Learn() {
                             <FormLabel component="legend" sx={{marginTop: 5}}>Mistakes</FormLabel>
                             <span style={{fontSize: "24px"}}>{mistakes}</span>
                         </Stack>
+                    </Paper>                     
+                </Box>}
+                {startLearning && timeControl &&
+                <Box sx={{marginTop: 2}}>
+                    <Paper sx={{padding: '15px', textAlign: "center"}} elevation={2} id="timer">
+                        <FormLabel component="legend">Time</FormLabel>
+                        <span style={{fontSize: "64px", fontWeight: "bold"}}>{timer}</span>
                     </Paper>                     
                 </Box>}
                 <Box sx={{marginTop: 6, textAlign: "center"}}>
