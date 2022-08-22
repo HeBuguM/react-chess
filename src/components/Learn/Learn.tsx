@@ -6,7 +6,7 @@ import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, initialBoard
 import { Box, Button, FormControlLabel, FormLabel, Paper, Switch } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFire, faGraduationCap, faHourglass, faInfinity } from "@fortawesome/free-solid-svg-icons";
+import { faGraduationCap, faHourglass, faInfinity } from "@fortawesome/free-solid-svg-icons";
 
 export default function Learn() {
     const chessboardRef = useRef<HTMLDivElement>(null);
@@ -184,9 +184,7 @@ export default function Learn() {
                         <FormLabel component="legend" sx={{marginTop: 2}}>Mode</FormLabel>
                         <Stack display={"flex"} direction="row" spacing={1} alignItems="center" justifyContent="space-evenly">
                             <FontAwesomeIcon icon={faInfinity} style={{cursor:"pointer", opacity: !timeControl ? "1" : "0.3"}} fontSize="50px" onClick={() => setTimeControl(false)}></FontAwesomeIcon>
-                            <FontAwesomeIcon icon={faHourglass} style={{cursor:"pointer", opacity: timeControl ? "1" : "0.3"}} fontSize="40px" onClick={() => setTimeControl(true)}></FontAwesomeIcon>
-                            {<FontAwesomeIcon icon={faFire} style={{cursor:"pointer", opacity: timeControl ? "1" : "0.3"}} fontSize="40px" onClick={() => setTimeControl(true)}></FontAwesomeIcon>}
-                            
+                            <FontAwesomeIcon icon={faHourglass} style={{cursor:"pointer", opacity: timeControl ? "1" : "0.3"}} fontSize="40px" onClick={() => setTimeControl(true)}></FontAwesomeIcon>                            
                         </Stack>
                         <FormLabel component="legend" sx={{marginTop: 3}}>Board</FormLabel>
                         <FormControlLabel
