@@ -3,12 +3,13 @@ import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import Notation from "../Notation/Notation";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, PieceValue, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore, MoveHistory} from "../../Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, PieceValue, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore, MoveHistory, ArrowType} from "../../Constants";
 import { Box, Button, ButtonGroup, Dialog, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBackwardFast, faBackwardStep, faCircle, faFlag, faForwardFast, faForwardStep, faHandshakeSimple, faPenToSquare, faRetweet, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 import Captured from "../Captured/Captured";
+import Arrows from "../Arrows/Arrows";
 
 export default function Chessboard() {
     const arbiter = new Arbiter();
@@ -33,6 +34,8 @@ export default function Chessboard() {
         white: {queen: true, king: true},
         black: {queen: true, king: true}
     });
+    const [arrowStart, setArrowStart] = useState<Position | null>(null);
+    const [arrows, setArrows] = useState<ArrowType[]>([]);
     const chessboardRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
@@ -46,9 +49,45 @@ export default function Chessboard() {
         setShareDialogOpen(false);
     };
 
-    function drawArrow(e: React.MouseEvent) {
+    function grabArrow(e: React.MouseEvent) {
         if(cancelGrabPiece() === false) {
-            console.log("Right Click")
+            const chessboard = chessboardRef.current;
+            if(chessboard) {
+                setArrowStart({
+                    x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
+                    y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
+                });
+            }
+        }
+    }
+
+    function dropArrow(e: React.MouseEvent) {
+        if(cancelGrabPiece() === false) {
+            const chessboard = chessboardRef.current;
+            if(chessboard) {
+                const arrowEnd = {
+                    x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
+                    y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
+                }
+                if(arrowStart) {
+                    if(arrowStart.x !== arrowEnd.x || arrowStart.y !== arrowEnd.y) {
+                        arrows.push({
+                            start: arrowStart,
+                            end: arrowEnd
+                        });
+                        setArrows([...arrows])
+                    } else {
+                        const highlight_square = document.querySelector("[data-coordinates="+translatePosition(arrowStart)+"]");
+                        if(highlight_square) {
+                            if(highlight_square.classList.contains("highlight")) {
+                                highlight_square?.classList.remove("highlight");
+                            } else {
+                                highlight_square?.classList.add("highlight");
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -61,10 +100,17 @@ export default function Chessboard() {
         return false;
     }
 
-    function grabPiece(e: React.MouseEvent) {
+    function clearBoard() {
         document.getElementById("shadow-piece")?.remove();
         document.querySelectorAll(".legal-move").forEach(e => e.remove());
-        
+        document.querySelectorAll(".highlight").forEach(e => e.classList.remove("highlight"));
+        setArrows([]);
+        setArrowStart(null);
+    }
+
+
+    function grabPiece(e: React.MouseEvent) {
+        clearBoard();        
         let element = e.target as HTMLElement;
         const chessboard = chessboardRef.current;
         if(element.classList.contains("chess-piece") && chessboard) {
@@ -135,13 +181,9 @@ export default function Chessboard() {
                 const correctTeam = turnTeam === grabbedPiece.team;
                 if(correctTeam && moveValidation.valid) {
                     completeMove(grabbedPiece, dropPosition, moveValidation);
-                } else {
-                    resetDraggedPiece();
-                    resetGrabbedPiece();
                 }
-            } else {
-                resetDraggedPiece();
             }
+            cancelGrabPiece();
         }
     }
 
@@ -163,7 +205,6 @@ export default function Chessboard() {
             modalRef.current?.classList.add("active");
             setPromotionPawn(moveValidation.promotionPawn);
         }
-        resetGrabbedPiece();
 
         // Material Check
         let legalMoves = 0;
@@ -423,12 +464,13 @@ export default function Chessboard() {
                     id="chessboard"
                     ref={chessboardRef}
                     onMouseMove={e => movePiece(e)}
-                    onMouseDown={e => e.button === 0 ? grabPiece(e) : (e.button === 2 ? drawArrow(e) : null)}
-                    onMouseUp={e => e.button === 0 ? dropPiece(e) : cancelGrabPiece()}
+                    onMouseDown={e => e.button === 0 ? grabPiece(e) : (e.button === 2 ? grabArrow(e) : null)}
+                    onMouseUp={e => e.button === 0 ? dropPiece(e) : (e.button === 2 ? dropArrow(e) : null)}
                 >
                     {board}
                     <div className="horizontalLabels" style={{flexDirection: boardFlipped ? "row-reverse" : "row"}}>{horizontalLabels}</div>
                     <div className="verticalLabels" style={{flexDirection: boardFlipped ? "column" : "column-reverse"}}>{verticalLabels}</div>
+                    <Arrows arrows={arrows} boardFlipped={boardFlipped}></Arrows>
                 </div>
             </Box>
             <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={350}>
@@ -443,7 +485,7 @@ export default function Chessboard() {
                 <Box>
                     <Notation moves={moveHistory} score={score}/>
                     <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
-                        <Button variant="contained" onClick={() => setBoardFlipped(!boardFlipped)}><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={() => {setBoardFlipped(!boardFlipped);}}><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
@@ -473,7 +515,6 @@ export default function Chessboard() {
             onClose={handleClose}
             maxWidth="md"
             fullWidth
-           
         >
             <Box sx={{margin: 3}}>
                 <Stack direction="row" spacing={2} alignContent="center">

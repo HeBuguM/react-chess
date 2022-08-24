@@ -108,6 +108,11 @@ export interface MoveHistory {
     FEN: string;
 }
 
+export interface ArrowType {
+    start: Position;
+    end: Position;
+}
+
 // Init Board Pieces
 export const initialBoardPieces: Piece[] = [];
 for (let p = 0; p < 2; p++) {
