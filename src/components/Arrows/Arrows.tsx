@@ -1,4 +1,4 @@
-import { ArrowType } from '../../constants/Constants';
+import { ArrowType } from '../../models/Constants';
 
 interface Props {
     arrows: ArrowType[];

@@ -1,4 +1,4 @@
-import { Piece, Position, TeamType } from "../../constants/Constants";
+import { Piece, Position, TeamType } from "../../../models/Constants";
 import { isEnemy, isOccupied } from "./GeneralRules";
 
 export const pawnMove = (grabPosition: Position, dropPosition: Position, team: TeamType, boardState: Piece[]): boolean => {

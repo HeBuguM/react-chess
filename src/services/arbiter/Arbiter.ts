@@ -1,4 +1,4 @@
-import { PieceType, TeamType, Piece, Position, CastleRights, ArbiterDecision, MoveType, samePosition, KingCheckStatus, translatePosition } from "../constants/Constants";
+import { PieceType, TeamType, Piece, Position, CastleRights, ArbiterDecision, MoveType, samePosition, KingCheckStatus, translatePosition } from "../../models/Constants";
 import { pawnMove, bishopMove, kingMove, knightMove, queenMove, rookMove } from "./rules";
 import { isEnemy, isOccupied } from "./rules/GeneralRules";
 
