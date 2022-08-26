@@ -1,8 +1,8 @@
 import "../Chessboard/Chessboard.css";
 import "./Learn.css";
 import { useEffect, useRef, useState } from "react";
-import Square from "../Squere/Square";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, initialBoardPieces , Position, translatePosition } from "../../Constants";
+import Square from "../../components/Squere/Square";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, initialBoardPieces , Position, translatePosition } from "../../constants/Constants";
 import { Box, Button, FormControlLabel, FormLabel, Paper, Switch } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

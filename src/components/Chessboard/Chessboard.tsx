@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../arbiter/Arbiter";
 import Notation from "../Notation/Notation";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, PieceValue, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore, MoveHistory, ArrowType} from "../../Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, PieceValue, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore, MoveHistory, ArrowType} from "../../constants/Constants";
 import { Box, Button, ButtonGroup, Dialog, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

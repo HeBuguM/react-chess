@@ -1,5 +1,5 @@
 import { Paper } from "@mui/material";
-import { GameScore, MoveHistory } from "../../Constants";
+import { GameScore, MoveHistory } from "../../constants/Constants";
 import "./Notation.css";
 
 interface Props {

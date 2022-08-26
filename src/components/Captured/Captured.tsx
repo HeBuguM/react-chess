@@ -1,6 +1,6 @@
 import { faChessBishop, faChessKnight, faChessPawn, faChessQueen, faChessRook } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { CapturedPieces, PieceType, TeamType } from "../../Constants";
+import { CapturedPieces, PieceType, TeamType } from "../../constants/Constants";
 
 interface Props {
     pieces: CapturedPieces
