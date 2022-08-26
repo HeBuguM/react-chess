@@ -164,7 +164,7 @@ export default function Chessboard() {
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
             draggedPiece.style.position = "fixed";
-            draggedPiece.style.opacity = "0.8";
+            draggedPiece.style.opacity = "0.9";
             draggedPiece.style.left = x < minX ? `${minX}px` : (x > maxX ? `${maxX}px` : `${x}px`)
             draggedPiece.style.top = y < minY ? `${minY}px` : (y > maxY ? `${maxY}px` : `${y}px`)
         }
