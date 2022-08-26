@@ -1,4 +1,3 @@
-import "../Chessboard/Chessboard.css";
 import "./Learn.css";
 import { useEffect, useRef, useState } from "react";
 import Square from "../../components/Squere/Square";
