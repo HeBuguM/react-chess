@@ -6,7 +6,6 @@ interface Props {
 }
 
 const Arrows = ({ arrows, boardFlipped }: Props) => {
-    console.log(arrows);
     return (
         <svg className="drawings" preserveAspectRatio="xMidYMid slice" viewBox="0 0 8 8">
             <defs>
