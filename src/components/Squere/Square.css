@@ -31,11 +31,37 @@
     background-repeat: no-repeat;
     z-index: 90;
 }
+
 #chessboard .square .chess-piece:hover { 
     cursor: grab;
 }
 #chessboard .square .chess-piece:active { 
     cursor: grabbing;
+}
+#chessboard .square:not(:empty) {
+    cursor: pointer;
+}
+
+#chessboard .square .legal-move {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    position: absolute;
+    background-color: orange;
+    z-index: 1;
+    opacity: 0.5;
+    margin:35px;
+}
+#chessboard .square .chess-piece + .legal-move { 
+    width: 100px;
+    height: 100px;
+    border: 6px solid orange;
+    border-radius: 50%;
+    position: absolute;
+    background-color: transparent;
+    z-index: 1;
+    opacity: 0.5;
+    margin:0;
 }
 
 #chessboard .square .chess-piece.pawn.white {
