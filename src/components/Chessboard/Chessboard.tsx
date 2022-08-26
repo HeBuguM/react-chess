@@ -71,11 +71,17 @@ export default function Chessboard() {
                 }
                 if(arrowStart) {
                     if(arrowStart.x !== arrowEnd.x || arrowStart.y !== arrowEnd.y) {
-                        arrows.push({
-                            start: arrowStart,
-                            end: arrowEnd
-                        });
-                        setArrows([...arrows])
+                        const sameArrow = arrows.find(arrow => samePosition(arrowStart,arrow.start) && samePosition(arrowEnd,arrow.end));
+                        if(sameArrow) {
+                            const newArrows = arrows.filter(arrow => !samePosition(arrowStart,arrow.start) && !samePosition(arrowEnd,arrow.end));
+                            setArrows([...newArrows])
+                        } else {
+                            arrows.push({
+                                start: arrowStart,
+                                end: arrowEnd
+                            });
+                            setArrows([...arrows])
+                        }
                     } else {
                         const highlight_square = document.querySelector("[data-coordinates="+translatePosition(arrowStart)+"]");
                         if(highlight_square) {
@@ -126,11 +132,6 @@ export default function Chessboard() {
                         const possible_square = document.querySelector("[data-coordinates="+m+"]");
                         const legal = document.createElement('div');
                         legal.setAttribute("class", "legal-move");
-                        if(possible_square?.querySelector(".chess-piece")) {
-                            legal.style.cssText = `width: 100px; height: 100px; border: 4px solid orange; border-radius: 50%; position: absolute; z-index: 1; opacity: 0.4;`
-                        } else {
-                            legal.style.cssText = `width: 30px; height: 30px; border-radius: 50%; position: absolute; background-color: orange; z-index: 1; opacity: 0.4; margin:35px`
-                        }
                         possible_square?.appendChild(legal);
                     })
                     const x = e.clientX - (SQUARE_SIZE/2);
@@ -163,6 +164,7 @@ export default function Chessboard() {
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
             draggedPiece.style.position = "fixed";
+            draggedPiece.style.opacity = "0.8";
             draggedPiece.style.left = x < minX ? `${minX}px` : (x > maxX ? `${maxX}px` : `${x}px`)
             draggedPiece.style.top = y < minY ? `${minY}px` : (y > maxY ? `${maxY}px` : `${y}px`)
         }
@@ -181,9 +183,10 @@ export default function Chessboard() {
                 const correctTeam = turnTeam === grabbedPiece.team;
                 if(correctTeam && moveValidation.valid) {
                     completeMove(grabbedPiece, dropPosition, moveValidation);
+                    clearBoard();
                 }
             }
-            cancelGrabPiece();
+            resetDraggedPiece();
         }
     }
 
@@ -279,6 +282,7 @@ export default function Chessboard() {
         if(draggedPiece) {
             draggedPiece.style.removeProperty("z-index");
             draggedPiece.style.removeProperty("position");
+            draggedPiece.style.removeProperty("opacity");
             draggedPiece.style.removeProperty("top");
             draggedPiece.style.removeProperty("left");
             setDraggedPiece(null);
@@ -485,7 +489,7 @@ export default function Chessboard() {
                 <Box>
                     <Notation moves={moveHistory} score={score}/>
                     <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
-                        <Button variant="contained" onClick={() => {setBoardFlipped(!boardFlipped);}}><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={() => {setBoardFlipped(!boardFlipped);clearBoard();}}><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained"><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
