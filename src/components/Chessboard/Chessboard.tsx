@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import Square from "../Squere/Square";
 import Arbiter from "../../services/arbiter/Arbiter";
 import Notation from "../Notation/Notation";
-import { HORIZONTAL_AXIS, VERTICAL_AXIS, SQUARE_SIZE, samePosition, Piece, PieceType, PieceValue, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore, MoveHistory, ArrowType} from "../../models/Constants";
+import { HORIZONTAL_AXIS, VERTICAL_AXIS, samePosition, Piece, PieceType, PieceValue, TeamType, initialBoardPieces, Position, CastleRights, ArbiterDecision, translatePosition, CapturedPieces, moveSound, captureSound, genericSound, GameScore, MoveHistory, ArrowType} from "../../models/Constants";
 import { Box, Button, ButtonGroup, Dialog, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -49,10 +49,12 @@ export default function Chessboard() {
         setShareDialogOpen(false);
     };
 
+
     function grabArrow(e: React.MouseEvent) {
         if(cancelGrabPiece() === false) {
             const chessboard = chessboardRef.current;
             if(chessboard) {
+                let SQUARE_SIZE = (chessboard.offsetWidth / 8);
                 setArrowStart({
                     x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
                     y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
@@ -65,6 +67,7 @@ export default function Chessboard() {
         if(cancelGrabPiece() === false) {
             const chessboard = chessboardRef.current;
             if(chessboard) {
+                let SQUARE_SIZE = (chessboard.offsetWidth / 8);
                 const arrowEnd = {
                     x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
                     y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
@@ -120,6 +123,7 @@ export default function Chessboard() {
         let element = e.target as HTMLElement;
         const chessboard = chessboardRef.current;
         if(element.classList.contains("chess-piece") && chessboard) {
+            let SQUARE_SIZE = (chessboard.offsetWidth / 8);
             const findPiece = boardPieces.find(p => 
                 p.position.x === Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)) 
                 && p.position.y === Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
@@ -140,12 +144,14 @@ export default function Chessboard() {
                     element.style.position = "fixed";
                     element.style.left = `${x}px`;
                     element.style.top = `${y}px`;
+                    element.style.width = `${SQUARE_SIZE}px`;
+                    element.style.height = `${SQUARE_SIZE}px`;
         
                     document.getElementById("shadow-piece")?.remove();
                     const shadow_piece = document.createElement('div');
                     shadow_piece.setAttribute("id", "shadow-piece");
                     shadow_piece.setAttribute("class", element.classList.value);
-                    shadow_piece.style.cssText = `width: 100px; height: 100px;position: absolute; background-color: green; z-index: 1; opacity: 0.3;`
+                    shadow_piece.style.cssText = `width: 12.5%; height: 12.5%;position: absolute; background-color: green; z-index: 1; opacity: 0.3;`
                     element.parentElement?.appendChild(shadow_piece);
         
                     setDraggedPiece(element);
@@ -157,22 +163,22 @@ export default function Chessboard() {
     function movePiece(e: React.MouseEvent) {
         const chessboard = chessboardRef.current;
         if(draggedPiece && chessboard) {
-            const minX = chessboard.offsetLeft - (SQUARE_SIZE/2);
-            const minY = chessboard.offsetTop - (SQUARE_SIZE/2);
-            const maxX = chessboard.offsetLeft + chessboard.clientWidth - (SQUARE_SIZE/2);
-            const maxY = chessboard.offsetTop + chessboard.clientHeight - (SQUARE_SIZE/2);
+            let SQUARE_SIZE = (chessboard.offsetWidth / 8);
             const x = e.clientX - (SQUARE_SIZE/2);
             const y = e.clientY - (SQUARE_SIZE/2);
             draggedPiece.style.position = "fixed";
             draggedPiece.style.opacity = "0.9";
-            draggedPiece.style.left = x < minX ? `${minX}px` : (x > maxX ? `${maxX}px` : `${x}px`)
-            draggedPiece.style.top = y < minY ? `${minY}px` : (y > maxY ? `${maxY}px` : `${y}px`)
+            draggedPiece.style.left = `${x}px`;
+            draggedPiece.style.top = `${y}px`;
+            draggedPiece.style.width = `${SQUARE_SIZE}px`;
+            draggedPiece.style.height = `${SQUARE_SIZE}px`;
         }
     } 
 
     function dropPiece(e: React.MouseEvent) {
         const chessboard = chessboardRef.current;
         if(grabbedPiece && chessboard) {
+            let SQUARE_SIZE = (chessboard.offsetWidth / 8);
             const dropPosition: Position = {
                 x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
                 y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
@@ -280,11 +286,7 @@ export default function Chessboard() {
 
     function resetDraggedPiece() {
         if(draggedPiece) {
-            draggedPiece.style.removeProperty("z-index");
-            draggedPiece.style.removeProperty("position");
-            draggedPiece.style.removeProperty("opacity");
-            draggedPiece.style.removeProperty("top");
-            draggedPiece.style.removeProperty("left");
+            draggedPiece.removeAttribute("style");
             setDraggedPiece(null);
         }
     }
