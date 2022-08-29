@@ -15,6 +15,7 @@ export default function Chessboard() {
     const arbiter = new Arbiter();
     const [boardFlipped, setBoardFlipped] = useState<boolean>(false);
     const [draggedPiece, setDraggedPiece] = useState<HTMLElement | null>(null);
+    const [resizing, setResizing] = useState<boolean>(false);
     const [promotionPawn, setPromotionPawn] = useState<Piece>();
     const [turnTeam, setTurnTeam] = useState<TeamType>(TeamType.WHITE);
     const [halfMoves, setHalfMoves] = useState<number>(0);
@@ -172,6 +173,12 @@ export default function Chessboard() {
             draggedPiece.style.top = `${y}px`;
             draggedPiece.style.width = `${SQUARE_SIZE}px`;
             draggedPiece.style.height = `${SQUARE_SIZE}px`;
+        } else if(resizing && chessboard) {
+            const size = e.clientX - chessboard.offsetLeft;
+            if(size % 8 === 0) {
+                chessboard.style.width = `${size}px`;
+                chessboard.style.height = `${size}px`;
+            }
         }
     } 
 
@@ -193,6 +200,8 @@ export default function Chessboard() {
                 }
             }
             resetDraggedPiece();
+        } else {
+            setResizing(false);
         }
     }
 
@@ -295,6 +304,14 @@ export default function Chessboard() {
             document.getElementById("shadow-piece")?.remove();
             document.querySelectorAll(".legal-move").forEach(e => e.remove());
             setGrabbedPiece(null);
+        }
+    }
+
+    function startResize(e: React.MouseEvent) {
+        let element = e.target as HTMLElement;
+        const chessboard = chessboardRef.current;
+        if(element.classList.contains("resizeBoard") && chessboard) {
+            setResizing(true);
         }
     }
 
@@ -477,6 +494,9 @@ export default function Chessboard() {
                     <div className="horizontalLabels" style={{flexDirection: boardFlipped ? "row-reverse" : "row"}}>{horizontalLabels}</div>
                     <div className="verticalLabels" style={{flexDirection: boardFlipped ? "column" : "column-reverse"}}>{verticalLabels}</div>
                     <Arrows arrows={arrows} boardFlipped={boardFlipped}></Arrows>
+                    <div className="resizeBoard" 
+                        onMouseDown={e => startResize(e)}
+                    ></div>
                 </div>
             </Box>
             <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={350}>
