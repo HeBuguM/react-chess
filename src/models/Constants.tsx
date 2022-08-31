@@ -19,7 +19,7 @@ export function translatePosition(position: Position, axis?: "x" | "y") {
 
 export const moveSound = new Audio("assets/sounds/Move.mp3");
 export const captureSound = new Audio("assets/sounds/Capture.mp3");
-export const genericSound = new Audio("/assets/sounds/Generic.mp3");
+export const genericSound = new Audio("assets/sounds/Generic.mp3");
 
 export interface Position {
     x: number;
