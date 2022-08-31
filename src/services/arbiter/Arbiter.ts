@@ -23,7 +23,7 @@ export default class Arbiter {
             return false;
         }
         // Check Path
-        for(let i = 1; i < last; i++) {
+        for(let i = 1; i < 2; i++) {
             let PassedPosition: Position = {x: grabbedPiece.position.x + (i*directionX), y: grabbedPiece.position.y}
             if(isOccupied(PassedPosition, boardState) || this.canEnemyAttack(PassedPosition, grabbedPiece.team, boardState)) {
                 return false;
