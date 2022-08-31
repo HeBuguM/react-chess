@@ -7,7 +7,7 @@ import { HORIZONTAL_AXIS, VERTICAL_AXIS, samePosition, Piece, PieceType, PieceVa
 import { Box, Button, ButtonGroup, Dialog, Paper, TextField } from "@mui/material";
 import { Stack } from "@mui/system";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBackwardFast, faBackwardStep, faCircle, faFlag, faForwardFast, faForwardStep, faHandshakeSimple, faPenToSquare, faRetweet, faShareNodes } from '@fortawesome/free-solid-svg-icons'
+import { faBackwardFast, faBackwardStep, faCheck, faCircle, faFlag, faForwardFast, faForwardStep, faHandshakeSimple, faPenToSquare, faRemove, faRetweet, faShareNodes } from '@fortawesome/free-solid-svg-icons'
 import Captured from "../Captured/Captured";
 import Arrows from "../Arrows/Arrows";
 
@@ -39,7 +39,8 @@ export default function Chessboard() {
     const [arrows, setArrows] = useState<ArrowType[]>([]);
     const chessboardRef = useRef<HTMLDivElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
-
+    const [offerDraw, setOfferDraw] = useState<boolean>(false);
+    const [resignGame, setResignGame] = useState<boolean>(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
     const handleClickOpen = () => {
@@ -293,6 +294,24 @@ export default function Chessboard() {
         sound.play();
     }
 
+    function Resign() {
+        setScore({
+            white: !boardFlipped ? 0 : 1,
+            black: !boardFlipped ? 1 : 0,
+            type: !boardFlipped ? "White Resigned" : "Black Resigned"
+        });
+        genericSound.play();
+    }
+
+    function acceptDraw() {
+        setScore({
+            white: 0.5,
+            black: 0.5,
+            type: "Draw by agreement"
+        });
+        genericSound.play();
+    }
+
     function resetDraggedPiece() {
         if(draggedPiece) {
             draggedPiece.removeAttribute("style");
@@ -518,13 +537,20 @@ export default function Chessboard() {
                         <Button variant="contained"><FontAwesomeIcon icon={faForwardFast} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained" onClick={handleClickOpen}><FontAwesomeIcon icon={faShareNodes} fontSize="24px"></FontAwesomeIcon></Button>
                     </ButtonGroup>
+                    {offerDraw && score.type === "" &&
+                    <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
+                        <Button variant="contained" color="info" startIcon={<FontAwesomeIcon icon={faHandshakeSimple}></FontAwesomeIcon>} onClick={() => acceptDraw()}>Accept Draw</Button>
+                        <Button variant="contained" color="info" startIcon={<FontAwesomeIcon icon={faRemove}></FontAwesomeIcon>} onClick={() => setOfferDraw(false)}></Button>
+                    </ButtonGroup>}
                     { score.type === "" && 
                     <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
-                        <Button variant="contained" color="warning"  startIcon={<FontAwesomeIcon icon={faHandshakeSimple}></FontAwesomeIcon>}>Offer Draw</Button>
-                        <Button variant="contained" color="error"  startIcon={<FontAwesomeIcon icon={faFlag}></FontAwesomeIcon>}>Resign</Button>
+                        {!resignGame && <Button variant="contained" color="warning" startIcon={<FontAwesomeIcon icon={faHandshakeSimple}></FontAwesomeIcon>} onClick={() => setOfferDraw(true)}>{!offerDraw ? "Offer Draw" : "Draw Offered"}</Button>}
+                        {!resignGame && offerDraw && <Button variant="contained" color="warning" startIcon={<FontAwesomeIcon icon={faRemove}></FontAwesomeIcon>} onClick={() => setOfferDraw(false)}></Button>}
+                        
+                        {!offerDraw && resignGame && <Button variant="contained" color="error" startIcon={<FontAwesomeIcon icon={faRemove}></FontAwesomeIcon>} onClick={() => setResignGame(false)}></Button>}
+                        {!offerDraw && <Button variant="contained" color="error" startIcon={<FontAwesomeIcon icon={resignGame ? faCheck : faFlag}></FontAwesomeIcon>} onClick={() => resignGame ? Resign() : setResignGame(true)}>Resign</Button>}
                     </ButtonGroup>
                     }
-                    
                 </Box>
                 <Box>
                     <Paper sx={{padding: '10px'}} elevation={turnTeam === (!boardFlipped ? TeamType.WHITE : TeamType.BLACK) ? 4 : 1}>
