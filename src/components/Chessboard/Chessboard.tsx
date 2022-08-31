@@ -191,6 +191,13 @@ export default function Chessboard() {
                 x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
                 y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
             }
+
+            if(grabbedPiece.type === PieceType.PAWN && dropPosition.y === (grabbedPiece.team === TeamType.WHITE ? 7 : 0)) {
+                modalRef.current?.classList.add("active");
+                setPromotionPawn(grabbedPiece);
+                resetDraggedPiece();
+                return false;
+            }
             
             if(!samePosition(grabbedPiece.position,dropPosition)) {
                 const moveValidation = arbiter.validateMove(grabbedPiece, dropPosition, boardPieces, enPassantTarget, castleRights);
