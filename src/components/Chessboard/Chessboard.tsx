@@ -502,7 +502,10 @@ export default function Chessboard() {
     }
 
     const scrollNotation = () => {
-        document.querySelector(".fullMove:last-child")?.scrollIntoView({ behavior: "smooth" })
+        const element = document.getElementById("notation")
+        if(element) {
+            element.scrollTop = element.scrollHeight;
+        }
     }
 
     return (
