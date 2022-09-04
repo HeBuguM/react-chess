@@ -71,7 +71,7 @@ export interface ArbiterDecision {
     castleRights: CastleRights;
     enPassantTarget: Position | false;
     notation: string;
-    promotionPawn?: Piece
+    promotion?: PieceType | false;
 }
 
 export enum PieceType {
@@ -81,6 +81,10 @@ export enum PieceType {
     ROOK='rook',
     QUEEN='queen',
     KING='king'
+}
+
+export function pieceTypeSymbol(type:PieceType) {
+    return type === PieceType.KNIGHT ? type.substring(1,2).toLocaleUpperCase() : type.substring(0,1).toLocaleUpperCase()
 }
 
 export const PieceValue = {

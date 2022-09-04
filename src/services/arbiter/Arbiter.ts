@@ -1,4 +1,4 @@
-import { PieceType, TeamType, Piece, Position, CastleRights, ArbiterDecision, MoveType, samePosition, KingCheckStatus, translatePosition } from "../../models/Constants";
+import { PieceType, TeamType, Piece, Position, CastleRights, ArbiterDecision, MoveType, samePosition, KingCheckStatus, translatePosition, pieceTypeSymbol } from "../../models/Constants";
 import { pawnMove, bishopMove, kingMove, knightMove, queenMove, rookMove } from "./rules";
 import { isEnemy, isOccupied } from "./rules/GeneralRules";
 
@@ -55,13 +55,14 @@ export default class Arbiter {
         }
     }
      
-    validateMove(grabbedPiece: Piece, dropPosition: Position, boardState: Piece[], enPassantTarget: Position | false ,castleRights: CastleRights):ArbiterDecision {
+    validateMove(grabbedPiece: Piece, dropPosition: Position, boardState: Piece[], enPassantTarget: Position | false ,castleRights: CastleRights, promoteInto?: PieceType):ArbiterDecision {
         let move: ArbiterDecision = {
             valid: false,
             newBoard: [],
             castleRights: JSON.parse(JSON.stringify(castleRights)),
             enPassantTarget: enPassantTarget,
-            notation: ""
+            notation: "",
+            promotion: false
         }
 
         const promotionRow = grabbedPiece.team === TeamType.WHITE ? 7 : 0;
@@ -106,9 +107,6 @@ export default class Arbiter {
             move.capture = isOccupied(dropPosition, boardState) && isEnemy(dropPosition, boardState, grabbedPiece.team);
             move.newBoard = boardState.reduce((results,piece) => {
                 if(samePosition(piece.position, grabbedPiece.position)) {                            
-                    if(piece.type === PieceType.PAWN && dropPosition.y === promotionRow) {
-                        move.promotionPawn = {...piece, position: dropPosition};
-                    }
                     if(piece.type === PieceType.KING) {
                         move.castleRights[piece.team].king = false;
                         move.castleRights[piece.team].queen = false;
@@ -122,7 +120,12 @@ export default class Arbiter {
                         }
                     }
                     move.enPassantTarget = piece.type === PieceType.PAWN && Math.abs(grabbedPiece.position.y - dropPosition.y) === 2 ? {x: dropPosition.x, y: dropPosition.y-pawnDirection} : false;
-                    results.push({...piece, position: dropPosition});
+                    if(piece.type === PieceType.PAWN && dropPosition.y === promotionRow) {
+                        results.push({...piece, position: dropPosition, type: promoteInto ? promoteInto : PieceType.QUEEN});
+                        move.promotion = promoteInto ? promoteInto : PieceType.QUEEN;
+                    } else {
+                        results.push({...piece, position: dropPosition});
+                    }
                 } else if (!samePosition(piece.position,  dropPosition)) {
                     results.push(piece);
                 } else if (samePosition(piece.position,  dropPosition)) {
@@ -145,7 +148,7 @@ export default class Arbiter {
         move.valid = checkStatus[grabbedPiece.team] ? false : move.valid;
         move.check = checkStatus[enemyTeam];
         // Notation
-        move.notation = this.generateNotation(grabbedPiece,dropPosition,boardState,enPassantTarget,move);
+        move.notation = this.generateNotation(grabbedPiece,dropPosition,boardState,move);
         return move;
     }
 
@@ -197,10 +200,11 @@ export default class Arbiter {
         return checkStatus;
     }
 
-    generateNotation(grabbedPiece: Piece, dropPosition: Position, boardPieces: Piece[], enPassantTarget: Position | false, move: ArbiterDecision) {
+    generateNotation(grabbedPiece: Piece, dropPosition: Position, boardPieces: Piece[], move: ArbiterDecision) {
         let coordinates = translatePosition(dropPosition);
         let check_sign = move.check ? "+" : "";
         let capture = move.capture ? "x" : "";
+        let promotion = move.promotion ? "="+pieceTypeSymbol(move.promotion) : "";
         let piece = "";
 
         if(move.type === MoveType.CASTLE) {
@@ -211,7 +215,7 @@ export default class Arbiter {
                     piece = translatePosition(grabbedPiece.position,"x");
                 }
             } else {
-                piece = grabbedPiece.type === PieceType.KNIGHT ? grabbedPiece.type.substring(1,2).toLocaleUpperCase() : grabbedPiece.type.substring(0,1).toLocaleUpperCase();
+                piece = pieceTypeSymbol(grabbedPiece.type);
                 if(grabbedPiece.type === PieceType.KNIGHT || grabbedPiece.type === PieceType.ROOK) {
                     let other_piece = boardPieces.find(p => p.type === grabbedPiece.type && p.team === grabbedPiece.team && !samePosition(p.position, grabbedPiece.position));
                     if(other_piece && this.isRegularMove(other_piece,dropPosition,boardPieces)) {
@@ -219,7 +223,7 @@ export default class Arbiter {
                     }
                 }
             }
-            return piece+capture+coordinates+check_sign;
+            return piece+capture+coordinates+promotion+check_sign;
         }
     }
 

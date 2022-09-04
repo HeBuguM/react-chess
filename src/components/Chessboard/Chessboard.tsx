@@ -16,7 +16,7 @@ export default function Chessboard() {
     const [boardFlipped, setBoardFlipped] = useState<boolean>(false);
     const [draggedPiece, setDraggedPiece] = useState<HTMLElement | null>(null);
     const [resizing, setResizing] = useState<boolean>(false);
-    const [promotionPawn, setPromotionPawn] = useState<Piece>();
+    const [promotePosition, setPromotePosition] = useState<Position | null>();
     const [turnTeam, setTurnTeam] = useState<TeamType>(TeamType.WHITE);
     const [halfMoves, setHalfMoves] = useState<number>(0);
     const [fullMoves, setFullMoves] = useState<number>(1);
@@ -38,7 +38,6 @@ export default function Chessboard() {
     const [arrowStart, setArrowStart] = useState<Position | null>(null);
     const [arrows, setArrows] = useState<ArrowType[]>([]);
     const chessboardRef = useRef<HTMLDivElement>(null);
-    const modalRef = useRef<HTMLDivElement>(null);
     const [offerDraw, setOfferDraw] = useState<boolean>(false);
     const [resignGame, setResignGame] = useState<boolean>(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -183,28 +182,34 @@ export default function Chessboard() {
         }
     } 
 
-    function dropPiece(e: React.MouseEvent) {
+    function dropPiece(event?: React.MouseEvent | null, promotePosition?: Position, promotionPieceType?: PieceType) {
         const chessboard = chessboardRef.current;
+        let dropPosition = {x: -1, y: -1}
+
         if(grabbedPiece && chessboard) {
             let SQUARE_SIZE = (chessboard.offsetWidth / 8);
-            const dropPosition: Position = {
-                x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
-                y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((e.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
-            }
-
-            if(grabbedPiece.type === PieceType.PAWN && dropPosition.y === (grabbedPiece.team === TeamType.WHITE ? 7 : 0)) {
-                modalRef.current?.classList.add("active");
-                setPromotionPawn(grabbedPiece);
-                resetDraggedPiece();
-                return false;
+            
+            if(promotePosition) {
+                dropPosition = promotePosition;
+            } else if(event) {
+                dropPosition = {
+                    x: Math.abs((boardFlipped ? 7 : 0) - Math.floor((event.clientX - chessboard.offsetLeft) / SQUARE_SIZE)),
+                    y: Math.abs((boardFlipped ? 7 : 0) - Math.abs(Math.ceil((event.clientY - chessboard.offsetTop - (SQUARE_SIZE*8)) / SQUARE_SIZE)))
+                }
             }
             
             if(!samePosition(grabbedPiece.position,dropPosition)) {
-                const moveValidation = arbiter.validateMove(grabbedPiece, dropPosition, boardPieces, enPassantTarget, castleRights);
+                const moveValidation = arbiter.validateMove(grabbedPiece, dropPosition, boardPieces, enPassantTarget, castleRights, promotionPieceType);
                 const correctTeam = turnTeam === grabbedPiece.team;
                 if(correctTeam && moveValidation.valid) {
-                    completeMove(grabbedPiece, dropPosition, moveValidation);
-                    clearBoard();
+                    if(grabbedPiece.type === PieceType.PAWN && dropPosition.y === (grabbedPiece.team === TeamType.WHITE ? 7 : 0) && !promotionPieceType) {
+                        setPromotePosition(dropPosition);
+                        resetDraggedPiece();
+                        return false;
+                    } else {
+                        completeMove(grabbedPiece, dropPosition, moveValidation);
+                        clearBoard();
+                    }
                 }
             }
             resetDraggedPiece();
@@ -226,11 +231,6 @@ export default function Chessboard() {
         setTurnTeam(newTeamTurn);
         setHalfMoves(newHalfMoves);
         setFullMoves(newFullMoves);
-        addNotation(grabbedPiece, dropPosition, moveValidation,newTeamTurn,newHalfMoves,newFullMoves);
-        if(moveValidation.promotionPawn) {
-            modalRef.current?.classList.add("active");
-            setPromotionPawn(moveValidation.promotionPawn);
-        }
 
         // Material Check
         let legalMoves = 0;
@@ -298,6 +298,7 @@ export default function Chessboard() {
                 type: "50-move Rule"
             })
         }
+        addNotation(grabbedPiece, dropPosition, moveValidation,newTeamTurn,newHalfMoves,newFullMoves);
         sound.play();
     }
 
@@ -348,7 +349,7 @@ export default function Chessboard() {
         document.querySelectorAll(`[data-coordinates=${old_coordinates}],[data-coordinates=${new_coordinates}]`).forEach(el => el.classList.add("new"));
         moveHistory.push({
             notation: moveValidation.notation,
-            FEN: generateFEN(moveValidation.newBoard,newturnTeam,moveValidation.castleRights,moveValidation.enPassantTarget,newHalfMoves)
+            FEN: generateFEN(moveValidation.newBoard,newturnTeam,moveValidation.castleRights,moveValidation.enPassantTarget,newHalfMoves,newFullMoves)
         });
         setMoveHistory(moveHistory);
         if(moveValidation.capture && moveValidation.capturedPiece) {
@@ -359,19 +360,16 @@ export default function Chessboard() {
     }
 
     function promotionPawnTeam() {
-        return promotionPawn?.team === TeamType.WHITE ? "w" : "b";
+        return grabbedPiece?.team === TeamType.WHITE ? "w" : "b";
     }
 
-    function promotePawn(Type: PieceType,Name: string) {
-        if(promotionPawn === undefined) {
-            return;
+    function promotePawn(Type: PieceType | false) {
+        if(promotePosition && Type) {
+            dropPiece(null,promotePosition,Type);
+            setPromotePosition(null);
         }
-        const updatedPieces = boardPieces.reduce((results,piece) => {
-            results.push({...piece, type: samePosition(piece.position, promotionPawn.position) ? Type : piece.type})
-            return results;
-        }, [] as Piece[]);
-        setBoardPieces(updatedPieces);
-        modalRef.current?.classList.remove("active");
+        setPromotePosition(null);
+        resetGrabbedPiece();
     }
 
     function generateFEN(newBoard?: Piece[], newturnTeam?: TeamType, newCastleRights?: CastleRights, newEnPassantTarget?: Position | false, newHalfMoves?: number, newFullMoves?: number) {
@@ -526,6 +524,14 @@ export default function Chessboard() {
                     <div className="resizeBoard" 
                         onMouseDown={e => startResize(e)}
                     ></div>
+                    {promotePosition && <div id="pawn-promotion-modal" className="active">
+                        <div className="modal-body" onClick={() => promotePawn(false)}>
+                            <img onClick={() => promotePawn(PieceType.QUEEN)} src={`assets/images/queen_${promotionPawnTeam()}.png`} alt="Queen"/>
+                            <img onClick={() => promotePawn(PieceType.ROOK)} src={`assets/images/rook_${promotionPawnTeam()}.png`} alt="Rook"/>
+                            <img onClick={() => promotePawn(PieceType.BISHOP)} src={`assets/images/bishop_${promotionPawnTeam()}.png`} alt="Bishop"/>
+                            <img onClick={() => promotePawn(PieceType.KNIGHT)} src={`assets/images/knight_${promotionPawnTeam()}.png`} alt="Knight"/>
+                        </div>
+                    </div>}
                 </div>
             </Box>
             <Box display={"flex"} flexDirection="column" justifyContent="space-between" width={350}>
@@ -588,15 +594,6 @@ export default function Chessboard() {
                 </Stack>
             </Box>
         </Dialog>
-
-        <div id="pawn-promotion-modal" ref={modalRef}>
-            <div className="modal-body">
-                <img onClick={() => promotePawn(PieceType.QUEEN,'queen')} src={`assets/images/queen_${promotionPawnTeam()}.png`} alt="Queen"/>
-                <img onClick={() => promotePawn(PieceType.ROOK,'rook')} src={`assets/images/rook_${promotionPawnTeam()}.png`} alt="Rook"/>
-                <img onClick={() => promotePawn(PieceType.BISHOP,'bishop')} src={`assets/images/bishop_${promotionPawnTeam()}.png`} alt="Bishop"/>
-                <img onClick={() => promotePawn(PieceType.KNIGHT,'knight')} src={`assets/images/knight_${promotionPawnTeam()}.png`} alt="Knight"/>
-            </div>
-        </div>
         </>
     );
 }
