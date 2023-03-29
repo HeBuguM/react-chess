@@ -85,6 +85,10 @@
     transform: translate(1px, 6px) rotate(-45deg);
 }
 
+#chessboard.rewinded {
+    opacity: 0.8;
+}
+
 #pawn-promotion-modal {
     display: none;
     position: absolute;

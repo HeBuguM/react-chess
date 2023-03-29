@@ -18,6 +18,8 @@ export default function Chessboard() {
     const [resizing, setResizing] = useState<boolean>(false);
     const [promotePosition, setPromotePosition] = useState<Position | null>();
     const [turnTeam, setTurnTeam] = useState<TeamType>(TeamType.WHITE);
+    const [boardLatest, setBoardLatest] = useState<boolean>(true);
+    const [boardMove, setBoardMove] = useState<number>(0);
     const [halfMoves, setHalfMoves] = useState<number>(0);
     const [fullMoves, setFullMoves] = useState<number>(1);
     const [score, setScore] = useState<GameScore>({
@@ -49,7 +51,6 @@ export default function Chessboard() {
     const handleClose = () => {
         setShareDialogOpen(false);
     };
-
 
     function grabArrow(e: React.MouseEvent) {
         if(cancelGrabPiece() === false) {
@@ -123,7 +124,7 @@ export default function Chessboard() {
         clearBoard();        
         let element = e.target as HTMLElement;
         const chessboard = chessboardRef.current;
-        if(element.classList.contains("chess-piece") && chessboard) {
+        if(element.classList.contains("chess-piece") && chessboard && boardLatest) {
             let SQUARE_SIZE = (chessboard.offsetWidth / 8);
             const findPiece = boardPieces.find(p => 
                 p.position.x === Math.abs((boardFlipped ? 7 : 0) - Math.floor((e.clientX - chessboard.offsetLeft) / SQUARE_SIZE)) 
@@ -186,7 +187,7 @@ export default function Chessboard() {
         const chessboard = chessboardRef.current;
         let dropPosition = {x: -1, y: -1}
 
-        if(grabbedPiece && chessboard) {
+        if(grabbedPiece && chessboard && boardLatest) {
             let SQUARE_SIZE = (chessboard.offsetWidth / 8);
             
             if(promotePosition) {
@@ -356,6 +357,9 @@ export default function Chessboard() {
             captured[grabbedPiece.team].push(moveValidation.capturedPiece);
             setCaptured(captured);
         }
+        if(boardLatest) {
+            setBoardMove(moveHistory.length);
+        }
         setTimeout(scrollNotation,100)
     }
 
@@ -370,6 +374,24 @@ export default function Chessboard() {
         }
         setPromotePosition(null);
         resetGrabbedPiece();
+    }
+
+    function changeBoardMove(move:number) {
+        if(move < 0 || move > moveHistory.length) {
+            return false;
+        }
+        setBoardMove(move);
+        if(boardLatest && move !== moveHistory.length) {
+            setBoardLatest(false);
+        } 
+        if(!boardLatest && move === moveHistory.length) {
+            setBoardLatest(true); 
+        }
+        if(move === 0) {
+            loadFEN('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1');
+        } else {
+            loadFEN(moveHistory[move-1].FEN);
+        }
     }
 
     function generateFEN(newBoard?: Piece[], newturnTeam?: TeamType, newCastleRights?: CastleRights, newEnPassantTarget?: Position | false, newHalfMoves?: number, newFullMoves?: number) {
@@ -425,8 +447,8 @@ export default function Chessboard() {
         return FEN.join(" ");
     }
 
-    function loadFEN() {
-        let new_FEN = prompt("Enter FEN");
+    function loadFEN(FEN: string | null = null) {
+        let new_FEN = FEN ? FEN : prompt("Enter FEN");
         let fenBoard = new_FEN?.split(" ")[0];
         let x = 0;
         let y = 7;
@@ -516,6 +538,7 @@ export default function Chessboard() {
                     onMouseMove={e => movePiece(e)}
                     onMouseDown={e => e.button === 0 ? grabPiece(e) : (e.button === 2 ? grabArrow(e) : null)}
                     onMouseUp={e => e.button === 0 ? dropPiece(e) : (e.button === 2 ? dropArrow(e) : null)}
+                    className={`${!boardLatest ? "rewinded" : ""}`}
                 >
                     {board}
                     <div className="horizontalLabels" style={{flexDirection: boardFlipped ? "row-reverse" : "row"}}>{horizontalLabels}</div>
@@ -544,13 +567,13 @@ export default function Chessboard() {
                     </Paper>
                 </Box>
                 <Box>
-                    <Notation moves={moveHistory} score={score}/>
+                    <Notation moves={moveHistory} score={score} boardMove={boardMove} changeBoardMove={changeBoardMove}/>
                     <ButtonGroup sx={{marginTop: 2}} fullWidth={true}>
                         <Button variant="contained" onClick={() => {setBoardFlipped(!boardFlipped);clearBoard();}}><FontAwesomeIcon icon={faRetweet} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained"><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained"><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained"><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
-                        <Button variant="contained"><FontAwesomeIcon icon={faForwardFast} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={() => changeBoardMove(0)}><FontAwesomeIcon icon={faBackwardFast} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={() => changeBoardMove(boardMove-1)}><FontAwesomeIcon icon={faBackwardStep} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={() => changeBoardMove(boardMove+1)}><FontAwesomeIcon icon={faForwardStep} fontSize="24px"></FontAwesomeIcon></Button>
+                        <Button variant="contained" onClick={() => changeBoardMove(moveHistory.length)}><FontAwesomeIcon icon={faForwardFast} fontSize="24px"></FontAwesomeIcon></Button>
                         <Button variant="contained" onClick={handleClickOpen}><FontAwesomeIcon icon={faShareNodes} fontSize="24px"></FontAwesomeIcon></Button>
                     </ButtonGroup>
                     {offerDraw && score.type === "" &&
@@ -587,7 +610,7 @@ export default function Chessboard() {
             <Box sx={{margin: 3}}>
                 <Stack direction="row" spacing={2} alignContent="center">
                     <TextField id="outlined-basic" label="FEN" variant="outlined" value={generateFEN()} fullWidth />
-                    <Button variant="outlined" onClick={loadFEN}><FontAwesomeIcon icon={faPenToSquare} fontSize="24px"></FontAwesomeIcon></Button>
+                    <Button variant="outlined" onClick={() => loadFEN()}><FontAwesomeIcon icon={faPenToSquare} fontSize="24px"></FontAwesomeIcon></Button>
                 </Stack>
                 <Stack direction="row" spacing={2} alignContent="center" marginTop={2}>
                     <TextField id="outlined-basic" label="PGN" variant="outlined" value={generatePGN()} fullWidth  multiline maxRows={4}/>
