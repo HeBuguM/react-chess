@@ -11,7 +11,7 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faChess, faGraduationCap, faUser } from '@fortawesome/free-solid-svg-icons';
 
 import { useState, MouseEvent } from "react";
 import { Link } from '@mui/material';
@@ -19,11 +19,13 @@ import { Link } from '@mui/material';
 const pages: any = [
   {
     name: 'Play',
-    path: '/react-chess/#/'
+    path: '/react-chess/#/',
+    icon: faChess
   }, 
   {
     name: 'Learn',
-    path: '/react-chess/#/learn'
+    path: '/react-chess/#/learn',
+    icon: faGraduationCap
   }
 ]
 const settings = ['Change Name'];
@@ -95,7 +97,7 @@ const Navbar = () => {
                 href={page.path}
                 onClick={handleCloseNavMenu}
               >
-                {page.name}
+                <FontAwesomeIcon icon={page.icon} ></FontAwesomeIcon> {page.name}
               </Button>
             ))}
           </Box>
